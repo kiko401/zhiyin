@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api import auth
 from app.core import config, security
 from app.core.db import check_db
+from app.core.responses import api_error_handler
 
 
 @asynccontextmanager
@@ -17,16 +18,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="知音 Zhiyin", version="0.1.0", lifespan=lifespan)
 app.include_router(auth.router)
+app.add_exception_handler(HTTPException, api_error_handler)
 
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
     return JSONResponse(status_code=404, content={"code": 40401, "message": "资源不存在", "data": None})
-
-
-@app.exception_handler(401)
-async def unauthorized_handler(request: Request, exc):
-    return JSONResponse(status_code=401, content={"code": 40402, "message": "未登录", "data": None})
 
 
 async def _count_lexicon() -> int:
