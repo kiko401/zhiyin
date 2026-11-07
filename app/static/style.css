@@ -565,3 +565,28 @@ body {
 
 .spec-actions { display:flex; gap:12px; margin-top:12px; align-items:center; }
 .spec-actions .btn + .btn { margin-left:12px; }
+
+/* 当前阶段脉冲动画 */
+.stage-dot.is-current {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+.stage-node.is-current .stage-label {
+  color: #2aa5a5;
+  font-weight: 600;
+}
+/* 加载提示文字 */
+.work-loading {
+  text-align: center;
+  font-size: 13px;
+  color: #5c6675;
+  padding: 8px 0 4px;
+}
+.work-loading .elapsed {
+  font-variant-numeric: tabular-nums;
+  color: #1a3a6b;
+  font-weight: 600;
+}

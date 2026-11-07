@@ -102,7 +102,17 @@
       else info.appendChild(el('span', 'chip', String(t)));
     });
     node.appendChild(info);
-    if (p.task_uid && !TERMINAL[String(p.state || '').toUpperCase()]) pollTask(p.task_uid, function (task) {
+    if (p.task_uid && !TERMINAL[String(p.state || '').toUpperCase()]) {
+      var loadTip = el('div', 'work-loading');
+      loadTip.innerHTML = '正在分析中，约需 10–30 秒 · 已等待 <span class="elapsed">0</span> 秒';
+      node.appendChild(loadTip);
+      var startTime = Date.now();
+      var loadTimer = setInterval(function() {
+        var e = loadTip.querySelector('.elapsed');
+        if (e) e.textContent = Math.round((Date.now() - startTime) / 1000);
+        else clearInterval(loadTimer);
+      }, 1000);
+      pollTask(p.task_uid, function (task) {
       var stMap = {DELIVERED:'已交付',DEGRADED:'已交付',FAILED:'排队',PLANNING:'规划',FETCHING:'取数',VERIFYING:'校验',ASSEMBLING:'组装'};
       var newBar = stageBar(stMap[task.state] || '排队');
       var old = node.querySelector('.stage-bar');
@@ -112,7 +122,11 @@
         var ansNode = renderAnswer({card_type:'answer',task_uid:p.task_uid,type:dl.type,summary:dl.summary,pros:dl.pros,cons:dl.cons,gaps:dl.gaps,statement:dl.statement,evidence_lines:dl.evidence_lines,citations:dl.citations,confidence:dl.confidence,fact_text:dl.fact_text,impact_text:dl.impact_text});
         node.parentNode.insertBefore(ansNode, node.nextSibling);
       }
+      var lt = node.querySelector('.work-loading');
+      if (lt) lt.remove();
+      clearInterval(loadTimer);
     });
+    }
     return node;
   }
 
@@ -209,6 +223,15 @@
           var wc = el('section', 'card card--work');
           wc.dataset.taskUid = d.task_uid;
           wc.appendChild(stageBar('排队'));
+          var loadTip = el('div', 'work-loading');
+          loadTip.innerHTML = '正在分析中，约需 10–30 秒 · 已等待 <span class="elapsed">0</span> 秒';
+          wc.appendChild(loadTip);
+          var startTime = Date.now();
+          var loadTimer = setInterval(function() {
+            var e = loadTip.querySelector('.elapsed');
+            if (e) e.textContent = Math.round((Date.now() - startTime) / 1000);
+            else clearInterval(loadTimer);
+          }, 1000);
           node.parentNode.insertBefore(wc, node.nextSibling);
           pollTask(d.task_uid, function (task) {
             var stMap = {DELIVERED:'已交付',DEGRADED:'已交付',FAILED:'排队',PLANNING:'规划',FETCHING:'取数',VERIFYING:'校验',ASSEMBLING:'组装'};
@@ -220,6 +243,9 @@
               var ansNode = renderAnswer({card_type:'answer',task_uid:task.task_uid,type:dl.type,summary:dl.summary,pros:dl.pros,cons:dl.cons,gaps:dl.gaps,statement:dl.statement,evidence_lines:dl.evidence_lines,citations:dl.citations,confidence:dl.confidence,fact_text:dl.fact_text,impact_text:dl.impact_text});
               wc.parentNode.insertBefore(ansNode, wc.nextSibling);
             }
+            var lt = wc.querySelector('.work-loading');
+            if (lt) lt.remove();
+            clearInterval(loadTimer);
           });
         }
       }).catch(function (e) { confirmBtn.textContent = '确认失败：' + (e.message || '重试'); confirmBtn.disabled = false; busy = false; });
