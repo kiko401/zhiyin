@@ -48,9 +48,13 @@ async def _get_or_create_session(db, user_id: int, session_uid: str | None) -> C
             )
         )
         s = row.scalar_one_or_none()
-        if not s:
-            raise ApiError(40401, "会话不存在", status_code=404)
-        return s
+        if s:
+            return s
+        # 跨账号或过期的 session_uid：自动落入新会话（契约语义：无有效会话即新建）
+    s = ChatSession(session_uid=str(uuid.uuid4()), user_id=user_id, state="IDLE")
+    db.add(s)
+    await db.flush()
+    return s
     s = ChatSession(session_uid=str(uuid.uuid4()), user_id=user_id, state="IDLE")
     db.add(s)
     await db.flush()
