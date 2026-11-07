@@ -104,7 +104,7 @@
     node.appendChild(info);
     if (p.task_uid && !TERMINAL[String(p.state || '').toUpperCase()]) {
       var loadTip = el('div', 'work-loading');
-      loadTip.innerHTML = '正在分析中，约需 10–30 秒 · 已等待 <span class="elapsed">0</span> 秒';
+      loadTip.innerHTML = '正在分析中，约需 20–40 秒 · 已等待 <span class="elapsed">0</span> 秒';
       node.appendChild(loadTip);
       var startTime = Date.now();
       var loadTimer = setInterval(function() {
@@ -222,7 +222,7 @@
           wc.dataset.taskUid = d.task_uid;
           wc.appendChild(stageBar('排队'));
           var loadTip = el('div', 'work-loading');
-          loadTip.innerHTML = '正在分析中，约需 10–30 秒 · 已等待 <span class="elapsed">0</span> 秒';
+          loadTip.innerHTML = '正在分析中，约需 20–40 秒 · 已等待 <span class="elapsed">0</span> 秒';
           wc.appendChild(loadTip);
           var startTime = Date.now();
           var loadTimer = setInterval(function() {
@@ -241,7 +241,7 @@
               var ansNode = renderAnswer({card_type:'answer',task_uid:task.task_uid,type:dl.type,summary:dl.summary,pros:dl.pros,cons:dl.cons,gaps:dl.gaps,statement:dl.statement,evidence_lines:dl.evidence_lines,citations:dl.citations,confidence:dl.confidence,fact_text:dl.fact_text,impact_text:dl.impact_text});
               wc.parentNode.insertBefore(ansNode, wc.nextSibling);
             }
-            if (task.state === 'DELIVERED' || task.state === 'DEGRADED') { var lt = wc.querySelector('.work-loading'); if (lt) lt.remove(); clearInterval(loadTimer); }
+            if (task.state === 'DELIVERED' || task.state === 'DEGRADED') { var lt = wc.querySelector('.work-loading'); if (lt) lt.remove(); clearInterval(loadTimer); var sp = wc.previousElementSibling; if (sp) { var cb = sp.querySelector('.btn--primary'); if (cb) { cb.textContent = '✓ 已完成'; cb.disabled = true; } } }
           });
         }
       }).catch(function (e) { confirmBtn.textContent = '确认失败：' + (e.message || '重试'); confirmBtn.disabled = false; busy = false; });

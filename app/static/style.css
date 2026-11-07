@@ -590,3 +590,24 @@ body {
   color: #1a3a6b;
   font-weight: 600;
 }
+
+
+/* 展开全文样式 */
+details > summary {
+  color: #1a3a6b;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 6px 0;
+  user-select: none;
+}
+details > summary::before {
+  content: '▸ 展开全文';
+  font-size: 13px;
+}
+details[open] > summary::before {
+  content: '▾ 收起';
+}
+details > summary span {
+  display: none;
+}
