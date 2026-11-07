@@ -165,11 +165,10 @@ async def _resolve_tickers(raw_names: list, lex_map: dict, prof: dict, session_t
     watch = prof.get("watch_list") or []
 
     def _by_watch(name: str):
+        # 仅接受带代码的条目；纯名称条目交给扶摇检索补代码
         for w in watch:
-            if isinstance(w, dict) and w.get("name") == name:
+            if isinstance(w, dict) and w.get("name") == name and w.get("code"):
                 return w
-            if isinstance(w, str) and w == name:
-                return {"name": w, "code": None}
         return None
 
     for raw in raw_names:

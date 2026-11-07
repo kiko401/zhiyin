@@ -66,7 +66,16 @@ async def _confirm_delegate(spec_row: ResearchSpec, user_id: int):
     from app.models import StandingTask
 
     trigger = (spec_row.spec or {}).get("trigger", {})
-    tk = (spec_row.spec or {}).get("fields", {}).get("ticker", {}).get("value", {})
+    tk = dict((spec_row.spec or {}).get("fields", {}).get("ticker", {}).get("value", {}))
+    if not tk.get("code") and tk.get("name"):
+        from app.tools import fuyao
+
+        items = await fuyao.search_ticker(tk["name"], limit=1)
+        if items:
+            tk["code"] = items[0].get("thscode")
+            tk["name"] = items[0].get("name")
+    if not tk.get("code"):
+        raise ApiError(40001, "标的无有效代码，请修正委托规格")
     async with SessionLocal() as db:
         st = StandingTask(
             standing_uid=str(_uuid.uuid4()),

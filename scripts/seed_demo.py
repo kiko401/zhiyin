@@ -46,18 +46,18 @@ async def main():
         for key, value in (("time_horizon", "短线"), ("risk_context", "被套中"),
                            ("knowledge_level", "veteran")):
             await c.patch(f"/api/profile/field/{key}", json={"value": value, "auth_state": "granted"})
-        c.patch("/api/profile/field/watch_list",
+        await c.patch("/api/profile/field/watch_list",
                 json={"value": ["宁德时代", "新易盛", "天孚通信", "中际旭创", "贵州茅台"],
                       "auth_state": "granted"})
 
         # 会话一：词典+画像零澄清（熟客体验）
-        d = await c.post("/api/chat", json={"text": "宁王这波断板了还能拿吗"}).json()["data"]
+        d = (await c.post("/api/chat", json={"text": "宁王这波断板了还能拿吗"})).json()["data"]
         spec_card = d["cards"][-1]
         if spec_card["card_type"] == "spec":
             await c.post(f"/api/spec/{spec_card['spec_uid']}/confirm", json=None)
 
         # 会话二：委托值守（委托卡 → 确认 → 首检简报）
-        d = await c.post("/api/chat", json={"text": "帮我盯着新易盛的减持公告，有动静告诉我"}).json()["data"]
+        d = (await c.post("/api/chat", json={"text": "帮我盯着新易盛的减持公告，有动静告诉我"})).json()["data"]
         card = d["cards"][-1]
         if card["card_type"] == "delegate":
             await c.post(f"/api/spec/{card['spec_uid']}/confirm", json=None)
