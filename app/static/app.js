@@ -187,11 +187,11 @@
     node.appendChild(wrap);
     var hint = el('p', null, '');
     hint.style.cssText = 'font-size:12px;color:#5c6675;margin:10px 0 4px;line-height:1.5;';
-    hint.innerHTML = '以上是知音对你问题的结构化理解。<b>确认后</b>知音将按此规格调度数据工具执行研究，回答带来源引用。字段可直接编辑。';
+    hint.innerHTML = '以上是知音对你问题的理解。<b>确认无误请点下方按钮</b>，知音将开始研究并在完成后给你一份带来源引用的报告。每个字段都可点击修改。';
     node.appendChild(hint);
     var legend = el('p', null, '');
     legend.style.cssText = 'font-size:11px;color:#aab4c0;margin:0 0 8px;';
-    legend.innerHTML = '来源：<span class="badge badge--source">词典消解</span>=黑话转标准名称 &nbsp; <span class="badge badge--source">画像注入</span>=记住的你的偏好 &nbsp; <span class="badge badge--source">标的检索</span>=从全市场匹配 &nbsp; <span class="badge badge--inferred">推断</span>=未确认，可编辑';
+    legend.innerHTML = '<span class="badge badge--source">自动识别</span> 从黑话/别名推断 &nbsp; <span class="badge badge--source">记住了你的偏好</span> 上次告诉过知音 &nbsp; <span class="badge badge--source">帮你查到的</span> 从全市场匹配 &nbsp; <span class="badge badge--inferred">推测，可修改</span> 不确定，请确认';
     node.appendChild(legend);
     var btnWrap = el('div', 'spec-actions');
     var confirmBtn = el('button', 'btn btn--primary', '确认执行'); confirmBtn.type = 'button';
@@ -257,7 +257,7 @@
     node.appendChild(wrap);
     var dHint = el('p', null, '');
     dHint.style.cssText = 'font-size:12px;color:#5c6675;margin:10px 0 4px;line-height:1.5;';
-    dHint.innerHTML = '确认后知音将按以上设定持续值守，检查结果以<b>简报</b>形式出现在动态页。四要素均可修改，下次检查生效。';
+    dHint.innerHTML = '确认后知音将<b>持续替你盯盘</b>，检查结果以简报形式出现在动态页。以上设定可修改，下次检查生效。';
     node.appendChild(dHint);
     if (p.freq_cap) node.appendChild(el('p', 'card-footer', p.freq_cap));
     var btnWrap = el('div', 'spec-actions');
