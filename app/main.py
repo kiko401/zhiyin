@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api import auth, chat, spec, task
+from app.api import auth, chat, feed, pages, profile, spec, standing, task
 from app.core import config, security
 from app.core.db import check_db
 from app.core.responses import api_error_handler
@@ -13,8 +14,10 @@ from app.core.responses import api_error_handler
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.services import lexicon as lexicon_svc
+    from app.services import scheduler
 
     await lexicon_svc.warmup()
+    scheduler.start()
     yield
 
 
@@ -23,6 +26,11 @@ app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(spec.router)
 app.include_router(task.router)
+app.include_router(standing.router)
+app.include_router(feed.router)
+app.include_router(profile.router)
+app.include_router(pages.router)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.add_exception_handler(HTTPException, api_error_handler)
 
 

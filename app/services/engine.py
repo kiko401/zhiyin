@@ -175,6 +175,39 @@ async def _generate(task_row, spec: dict, evidences: list, question: str | None)
     clean = [e for e in evidences if not e.get("gap") and not e.get("error")]
     dump = json.dumps(clean, ensure_ascii=False, default=str)
 
+
+    if tt == "standing_watch":
+        # 简报四件套：事实段（≤120字带角标）+ 中性影响一句；模板组装不经模型（触发是规则、行文求稳）
+        snap = next((e for e in clean if e["tool"] == "snapshot"), None)
+        lu = next((e for e in clean if e["tool"] == "limit_up"), None)
+        tk = spec.get("fields", {}).get("ticker", {}).get("value", {})
+        cites, facts = [], []
+        n = 0
+        if snap:
+            n += 1
+            it = snap.get("payload") or {}
+            facts.append(f"最新价 {it.get('last_price')} 元（涨跌 {it.get('price_change_ratio_pct')}%）[{n}]")
+            cites.append({"n": n, "source": snap.get("source"), "as_of": snap.get("as_of"),
+                          "unit": snap.get("unit"), "caliber": snap.get("caliber"), "tool": "snapshot"})
+        if lu:
+            n += 1
+            top = (lu.get("payload") or {}).get("top", [])
+            names = "、".join(i.get("name", "") for i in top[:3])
+            facts.append(f"今日涨停池 {len(top)} 家（连板前列：{names}）[{n}]")
+            cites.append({"n": n, "source": lu.get("source"), "as_of": lu.get("as_of"),
+                          "unit": lu.get("unit"), "caliber": lu.get("caliber"), "tool": "limit_up"})
+        gaps = [e.get("gap") for e in evidences if e.get("gap")]
+        if gaps:
+            facts.append(f"缺口：{'；'.join(gaps)}")
+        content = {
+            "type": "briefing",
+            "headline": f"{tk.get('name', '')}盯盘检查",
+            "fact_text": "；".join(facts)[:120],
+            "impact_text": "以上为盘面事实记录，不构成操作建议",
+            "evidence": cites,
+            "gaps_note": "；".join(gaps),
+        }
+        return content
     if tt == "fact_query":
         metric = str(spec.get("fields", {}).get("metric", {}).get("value", ""))
         caliber = str(spec.get("fields", {}).get("caliber", {}).get("value", ""))
@@ -373,6 +406,21 @@ async def _execute(task_uid: str):
         elapsed = int((time.monotonic() - t0) * 1000)
         conf = _confidence(spec, evidences)
         db.add(Answer(task_id=task.id, answer_uid=str(uuid.uuid4()), content=content, confidence=conf))
+        if content.get("type") == "briefing" and task.standing_task_id:
+            # 频控：同任务当日已有简报则不入流（宁缺毋假）
+            from app.models import Briefing
+
+            brows = await db.execute(select(Briefing).where(
+                Briefing.standing_task_id == task.standing_task_id,
+                Briefing.status == "published"))
+            today = datetime.now().isoformat()[:10]
+            today_count = sum(1 for b in brows.scalars() if str(b.created_at)[:10] == today)
+            if today_count < 1:
+                db.add(Briefing(briefing_uid=str(uuid.uuid4()), standing_task_id=task.standing_task_id,
+                                task_id=task.id, headline=content.get("headline"),
+                                fact_text=content.get("fact_text", ""),
+                                impact_text=content.get("impact_text"),
+                                evidence=content.get("evidence"), status="published"))
         await _event(db, task.id, "deliver", stage=task.state, elapsed_ms=elapsed)
         await _deliver_to_session(db, task, content)
         await db.commit()
