@@ -4,6 +4,7 @@ import uuid
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 
 from app.core import config, security
 from app.core.db import SessionLocal
@@ -42,11 +43,11 @@ class MemoryBody(BaseModel):
 async def _get_or_create_session(db, user_id: int, session_uid: str | None) -> ChatSession:
     if session_uid:
         row = await db.execute(
-            ChatSession.__table__.select().where(
+            select(ChatSession).where(
                 ChatSession.session_uid == session_uid, ChatSession.user_id == user_id
             )
         )
-        s = row.first()
+        s = row.scalar_one_or_none()
         if not s:
             raise ApiError(40401, "会话不存在", status_code=404)
         return s
@@ -56,7 +57,7 @@ async def _get_or_create_session(db, user_id: int, session_uid: str | None) -> C
     return s
 
 
-async def _persist_card(db, session_row, card: dict, task_uid: str | None = None) -> None:
+def _persist_card(db, session_row, card: dict, task_uid: str | None = None) -> None:
     db.add(Message(
         session_id=session_row.id,
         role="system",
@@ -107,9 +108,9 @@ async def chat(body: ChatBody, user_id: int = Depends(require_user)):
 
     async with SessionLocal() as db:
         row = await db.execute(
-            ChatSession.__table__.select().where(ChatSession.session_uid == session_uid)
+            select(ChatSession).where(ChatSession.session_uid == session_uid)
         )
-        s = row.first()
+        s = row.scalar_one_or_none()
         if card["card_type"] == "clarify":
             cl = Clarification(
                 session_id=s.id,
@@ -126,7 +127,7 @@ async def chat(body: ChatBody, user_id: int = Depends(require_user)):
             await _save_clarify_context(card, {
                 "text": text, "answers": result.get("answers", {}),
                 "round": card.get("round", 1), "ambiguity": card.get("ambiguity"),
-                "session_uid": session_uid, "user_id": user_id,
+                "session_uid": session_uid, "session_id": session_id, "user_id": user_id,
                 "session_ticker": st, "candidates": result.get("candidates", []),
                 "free_input": bool(result.get("free_input")),
             })
@@ -188,9 +189,9 @@ async def clarify_choice(clarify_id: int, body: ChoiceBody, user_id: int = Depen
                     new_card = decision_svc._clarify_card(0, "A1", "你指的是哪一只？",
                                                           [i.get("name") for i in items], ctx["round"] + 1)
                     async with SessionLocal() as db:
-                        srow = await db.execute(ChatSession.__table__.select().where(
+                        srow = await db.execute(select(ChatSession).where(
                             ChatSession.session_uid == ctx["session_uid"]))
-                        s = srow.first()
+                        s = srow.scalar_one_or_none()
                         cl2 = Clarification(session_id=s.id, round_no=ctx["round"] + 1,
                                             question=new_card["question"],
                                             options={"options": new_card["options"], "free_input": False},
@@ -201,7 +202,8 @@ async def clarify_choice(clarify_id: int, body: ChoiceBody, user_id: int = Depen
                         new_card["clarify_id"] = cl2.id
                         db.add(Message(session_id=s.id, role="system", card_type="clarify", content=new_card))
                         await db.commit()
-                    await _save_clarify_context(new_card, {**ctx, "round": ctx["round"] + 1})
+                    await _save_clarify_context(new_card, {**ctx, "round": ctx["round"] + 1,
+                                                           "ambiguity": new_card["ambiguity"]})
                     return ok({"session_uid": ctx["session_uid"], "state": "CLARIFY", "cards": [new_card]})
                 else:
                     new_card = decision_svc._clarify_card(0, "A1", "没有检索到该标的，换个说法或直接输入代码。",
@@ -214,7 +216,7 @@ async def clarify_choice(clarify_id: int, body: ChoiceBody, user_id: int = Depen
 
     round_no = ctx.get("round", 1)
     result = await decision_svc.decide(
-        ctx["user_id"], None, ctx["text"],
+        ctx["user_id"], ctx.get("session_id"), ctx["text"],
         session_ticker=session_ticker, answers=answers, round_no=round_no,
     )
     card = result["card"]
@@ -222,9 +224,9 @@ async def clarify_choice(clarify_id: int, body: ChoiceBody, user_id: int = Depen
 
     async with SessionLocal() as db:
         srow = await db.execute(
-            ChatSession.__table__.select().where(ChatSession.session_uid == ctx["session_uid"])
+            select(ChatSession).where(ChatSession.session_uid == ctx["session_uid"])
         )
-        s = srow.first()
+        s = srow.scalar_one_or_none()
         if card["card_type"] == "clarify":
             cl2 = Clarification(
                 session_id=s.id, round_no=card.get("round", round_no + 1),
@@ -238,6 +240,7 @@ async def clarify_choice(clarify_id: int, body: ChoiceBody, user_id: int = Depen
             card["clarify_id"] = cl2.id
             await _save_clarify_context(card, {**ctx, "answers": answers,
                                                "round": card.get("round", round_no + 1),
+                                               "ambiguity": card.get("ambiguity"),
                                                "session_ticker": session_ticker})
         _persist_card(db, s, card)
         s.state = result["state"]

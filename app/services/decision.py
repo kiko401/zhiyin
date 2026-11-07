@@ -113,8 +113,14 @@ async def _llm_intent(text: str, lex_notes: list, prof: dict) -> dict:
         '"risk_tier":0,"tickers":["提到的A股标的原始名称"],"metrics":["提到的指标"],'
         '"delegate":{"scope":"公告与新闻","keywords":["减持"]}}。'
         "判定：请系统持续盯守或定时提醒→delegate（scope 取 公告与新闻/涨跌停梯队/价格阈值 之一，并给关键词建议）；"
-        "问指标或行情数字→fact_query；问怎么操作/还能拿吗/要不要→decision_support；"
-        "问概念规则含义→knowledge。risk_tier：1=含预测涨跌/索要买卖指令/承诺收益意图，2=情绪化纠结（割肉/慌/死扛），默认0。"
+        "问指标或行情数字→fact_query；问概念规则含义→knowledge；"
+        "问怎么操作/还能拿吗/要不要/怎么看→decision_support。"
+        "risk_tier：1=让系统预测具体涨跌或给出买卖指令或承诺收益；2=情绪化纠结（割肉/慌/死扛）；默认0。"
+        "注意：持有类咨询（还能拿吗/要不要卖）是 decision_support 且 risk_tier=0，不是指令。"
+        "示例：'新易盛还能拿吗'→decision_support,0；'茅台营收多少'→fact_query,0；"
+        "'帮我决定明天买什么'→decision_support,1；'明天哪只股票能涨停'→decision_support,1；"
+        "'恒瑞割肉还是死扛'→decision_support,2；"
+        "'每天盘后帮我盯着新易盛的减持公告'→delegate,0。"
     )
     user = ("\n".join(ctx) + "\n" if ctx else "") + f"用户消息：{text}"
     try:
@@ -356,8 +362,14 @@ async def decide(
             }
         fields = {
             "ticker": {"value": ticker, "resolved_by": ticker["source"] if ticker else "assumption"},
-            "time_horizon": {"value": prof.get("time_horizon") or "波段（假设）", "resolved_by": "profile" if prof.get("time_horizon") else "assumption"},
-            "risk_context": {"value": prof.get("risk_context") or "未提供（按中性处境）", "resolved_by": "profile" if prof.get("risk_context") else "assumption"},
+            "time_horizon": {
+                "value": answers.get("time_horizon") or prof.get("time_horizon") or "波段（假设）",
+                "resolved_by": "clarify" if answers.get("time_horizon") else ("profile" if prof.get("time_horizon") else "assumption"),
+            },
+            "risk_context": {
+                "value": answers.get("risk_context") or prof.get("risk_context") or "未提供（按中性处境）",
+                "resolved_by": "clarify" if answers.get("risk_context") else ("profile" if prof.get("risk_context") else "assumption"),
+            },
         }
         spec = await _save_and_card(user_id, session_id, "decision_support", fields, lex["notes"], info.get("risk_tier", 0))
         return {"action": "spec", "state": "SPEC_REVIEW", "card": spec,
