@@ -13,7 +13,11 @@
   }
   function envelope(res) { if (res && res.code === 0) return res.data || {}; throw new Error((res && res.message) || '请求失败'); }
   function dataOf(res) { return (res && res.code === 0 ? res.data : res) || {}; }
-  function payloadOf(card) { return (card && (card.payload || card.data)) || {}; }
+  function payloadOf(card) {
+    if (card && card.payload) return card.payload;
+    if (card && card.data) return card.data;
+    return card || {};
+  }
   function sessionUid() {
     var uid = sessionStorage.getItem('zhiyin_session');
     if (!uid) sessionStorage.setItem('zhiyin_session', uid = 's-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
@@ -88,75 +92,129 @@
   }
 
   function renderWork(p) {
-    var node = cardNode('work'), uid = p.task_uid || p.task_id;
-    node.appendChild(noteHead(p.title || '任务执行', uid ? String(uid).slice(-6) : null, 'stage'));
-    var bar = stageBar(p.stage || p.status); node.appendChild(bar);
-    if (p.detail || p.current_action) node.appendChild(el('p', 'work-detail', p.detail || p.current_action));
-    if (uid && !TERMINAL[String(p.status || '').toUpperCase()]) {
-      pollTask(uid, function (task) { var fresh = stageBar(task.stage || task.status); bar.replaceWith(fresh); bar = fresh; });
-    }
+    var node = cardNode('work');
+    if (p.task_uid) node.dataset.taskUid = p.task_uid;
+    node.appendChild(stageBar(p.state === 'QUEUED' ? '排队' : p.state || ''));
+    var info = el('div', 'work-info');
+    if (p.blueprint) info.appendChild(el('span', null, '蓝图：' + p.blueprint));
+    (p.tools || []).forEach(function (t) {
+      if (typeof t === 'object' && t.tool) info.appendChild(el('span', 'chip', t.tool + ' ' + (t.status || '')));
+      else info.appendChild(el('span', 'chip', String(t)));
+    });
+    node.appendChild(info);
+    if (p.task_uid && !TERMINAL[String(p.state || '').toUpperCase()]) pollTask(p.task_uid, function (task) {
+      var stMap = {DELIVERED:'已交付',DEGRADED:'已交付',FAILED:'排队',PLANNING:'规划',FETCHING:'取数',VERIFYING:'校验',ASSEMBLING:'组装'};
+      var newBar = stageBar(stMap[task.state] || '排队');
+      var old = node.querySelector('.stage-bar');
+      if (old) node.replaceChild(newBar, old);
+      if ((task.state === 'DELIVERED' || task.state === 'DEGRADED') && task.deliverable) {
+        var dl = task.deliverable;
+        var ansNode = renderAnswer({card_type:'answer',task_uid:p.task_uid,type:dl.type,summary:dl.summary,pros:dl.pros,cons:dl.cons,gaps:dl.gaps,statement:dl.statement,evidence_lines:dl.evidence_lines,citations:dl.citations,confidence:dl.confidence,fact_text:dl.fact_text,impact_text:dl.impact_text});
+        node.parentNode.insertBefore(ansNode, node.nextSibling);
+      }
+    });
     return node;
   }
 
   function renderAnswer(p) {
     var node = cardNode('answer');
-    node.appendChild(el('p', 'card-title', p.title || '回答'));
-    if (p.summary || p.text) node.appendChild(el('p', 'answer-summary', p.summary || p.text));
-    var sections = p.sections || [
-      { title: '事实', content: p.facts }, { title: '分析', content: p.analysis },
-      { title: '依据', content: p.evidence }, { title: '边界', content: p.boundary }];
-    (Array.isArray(sections) ? sections : []).forEach(function (sec, i) {
-      var fold = el('details', 'ans-fold'); if (i === 0) fold.open = true;
-      fold.appendChild(el('summary', 'ans-fold-head', sec.title || ('段落 ' + (i + 1))));
-      var c = sec.content || sec.body || sec.text;
-      fold.appendChild(el('div', 'ans-fold-body', Array.isArray(c) ? c.join('\n') : (c == null ? '待补充' : String(c))));
-      node.appendChild(fold);
-    });
-    node.appendChild(el('span', 'ans-corner')).appendChild(badge(p.flag || '可溯源', 'fact'));
-    return node;
-  }
-
-  function renderBriefing(p, card) {
-    var node = cardNode('briefing');
-    node.appendChild(el('p', 'card-title', p.title || p.date || '简报'));
-    if (p.facts && p.facts.length) {
-      var facts = el('ul', 'briefing-facts');
-      p.facts.forEach(function (f) {
-        var li = el('li', null); li.appendChild(badge('事实', 'fact'));
-        li.appendChild(document.createTextNode(' ' + (typeof f === 'string' ? f : (f.text || ''))));
-        facts.appendChild(li);
-      });
-      node.appendChild(facts);
+    var type = p.type || 'four_part';
+    if (type === 'briefing') {
+      node.appendChild(noteHead(p.headline || '值守简报', '简报', 'stage'));
+      node.appendChild(el('p', null, p.fact_text || ''));
+      if (p.impact_text) node.appendChild(el('p', 'card-impact', p.impact_text));
+    } else if (type === 'fact_card') {
+      node.appendChild(noteHead('事实查询', '直答', 'fact'));
+      (p.evidence_lines || []).forEach(function (ln) { node.appendChild(el('p', null, ln)); });
+    } else if (type === 'evidence_card') {
+      node.appendChild(noteHead('证据数据', '降级', 'inferred'));
+      node.appendChild(el('p', null, p.statement || 'AI 分析暂不可用'));
+      (p.evidence_lines || []).forEach(function (ln) { node.appendChild(el('pre', 'fallback-payload', ln)); });
+    } else if (type === 'knowledge_card') {
+      node.appendChild(noteHead('知识回答', '知识', 'fact'));
+      node.appendChild(el('p', null, p.summary || ''));
+      if (p.body) node.appendChild(el('p', null, p.body));
+      if (p.gaps) node.appendChild(el('p', 'card-gaps', p.gaps));
+    } else {
+      var conf = p.confidence === 'high' ? '高' : p.confidence === 'low' ? '低' : '中';
+      node.appendChild(noteHead('研究回答', '置信度 ' + conf + ' · AI 生成', 'fact'));
+      if (p.summary) node.appendChild(el('p', 'card-summary', p.summary));
+      var details = el('details', 'answer-details');
+      details.appendChild(el('summary', null, '展开全文'));
+      if ((p.pros || []).length) {
+        details.appendChild(el('strong', null, '事实与正方论点'));
+        p.pros.forEach(function (x) { details.appendChild(el('p', null, x)); });
+      }
+      if ((p.cons || []).length) {
+        details.appendChild(el('strong', null, '反方论点与风险'));
+        p.cons.forEach(function (x) { details.appendChild(el('p', null, x)); });
+      }
+      if (p.gaps) { details.appendChild(el('strong', null, '未覆盖与假设')); details.appendChild(el('p', null, p.gaps)); }
+      if ((p.citations || []).length) {
+        details.appendChild(el('strong', null, '引用'));
+        p.citations.forEach(function (ct) {
+          details.appendChild(el('p', 'card-cite', '[' + ct.n + '] ' + (ct.tool || '') + ' · ' + (ct.as_of || '') + ' · ' + (ct.source || '')));
+        });
+      }
+      node.appendChild(details);
     }
-    if (p.impact || p.impact_text) node.appendChild(el('p', 'briefing-impact', p.impact || p.impact_text));
-    var bid = card.briefing_id || p.briefing_id || p.id, actions = el('div', 'card-actions');
-    [['转任务', 'btn', 'to_task'], ['这条不重要', 'btn btn--ghost', 'noise']].forEach(function (m) {
-      var b = el('button', m[1], m[0]); b.type = 'button'; if (!bid) b.disabled = true;
-      b.addEventListener('click', function () {
-        b.disabled = true; if (m[2] === 'noise') node.classList.add('is-muted');
-        postJSON('/api/briefing/' + bid + '/feedback', { action: m[2] }).catch(function () {});
-      });
-      actions.appendChild(b);
-    });
-    node.appendChild(actions);
+    node.appendChild(el('p', 'card-footer', '仅供参考，不构成投资建议 · AI 生成'));
     return node;
   }
 
-  function renderSpec(p) {
+  function renderBriefing(p) {
+    var node = cardNode('briefing');
+    node.appendChild(noteHead(p.headline || '值守简报', '简报', 'stage'));
+    node.appendChild(el('p', null, p.fact_text || ''));
+    if (p.impact_text) node.appendChild(el('p', 'card-impact', p.impact_text));
+    return node;
+  }
+
+  function renderSpec(p, card) {
     var node = cardNode('spec');
-    node.appendChild(el('p', 'card-title', p.title || '研究规格')); var wrap = el('div', 'spec-fields');
+    node.appendChild(el('p', 'card-title', '研究规格'));
+    if (p.spec_uid) node.dataset.specUid = p.spec_uid;
+    var wrap = el('div', 'spec-fields');
     (p.fields || []).forEach(function (f) {
-      var raw = f.value == null ? '' : (typeof f.value === 'object' ? JSON.stringify(f.value) : String(f.value));
-      var row = el('div', 'field-row'); row.appendChild(el('span', 'field-name', f.name || f.key || ''));
-      row.appendChild(el('span', 'field-value', raw));
-      if (f.source) row.appendChild(badge(f.source === 'inferred' ? '推断' : f.source, f.source === 'inferred' ? 'inferred' : 'fact'));
-      if (f.editable) row.appendChild(textBtn('改', function () {
-        var next = window.prompt('修改「' + (f.name || f.key) + '」', raw);
-        if (next != null && next !== raw) row.querySelector('.field-value').textContent = next;
-      }));
+      var display = f.value == null ? '' : (typeof f.value === 'object' ? (f.value.name || JSON.stringify(f.value)) : String(f.value));
+      var row = el('div', 'field-row');
+      row.appendChild(el('span', 'field-name', f.label || f.key || ''));
+      row.appendChild(el('span', 'field-value', display));
+      var srcLabel = f.resolved_by_label || f.resolved_by;
+      if (srcLabel) row.appendChild(badge(srcLabel, f.resolved_by === 'assumption' ? 'inferred' : 'source'));
       wrap.appendChild(row);
     });
     node.appendChild(wrap);
+    var btnWrap = el('div', 'spec-actions');
+    var confirmBtn = el('button', 'btn btn--primary', '确认执行'); confirmBtn.type = 'button';
+    var busy = false;
+    confirmBtn.addEventListener('click', function () {
+      if (busy) return; busy = true; confirmBtn.textContent = '执行中…'; confirmBtn.disabled = true;
+      var uid = p.spec_uid || (card && card.spec_uid);
+      postJSON('/api/spec/' + uid + '/confirm').then(function (res) {
+        var d = dataOf(res);
+        if (d.task_uid) {
+          var wc = el('section', 'card card--work');
+          wc.dataset.taskUid = d.task_uid;
+          wc.appendChild(stageBar('排队'));
+          node.parentNode.insertBefore(wc, node.nextSibling);
+          pollTask(d.task_uid, function (task) {
+            var stMap = {DELIVERED:'已交付',DEGRADED:'已交付',FAILED:'排队',PLANNING:'规划',FETCHING:'取数',VERIFYING:'校验',ASSEMBLING:'组装'};
+            var newBar = stageBar(stMap[task.state] || '排队');
+            var old = wc.querySelector('.stage-bar');
+            if (old) wc.replaceChild(newBar, old);
+            if ((task.state === 'DELIVERED' || task.state === 'DEGRADED') && task.deliverable) {
+              var dl = task.deliverable;
+              var ansNode = renderAnswer({card_type:'answer',task_uid:task.task_uid,type:dl.type,summary:dl.summary,pros:dl.pros,cons:dl.cons,gaps:dl.gaps,statement:dl.statement,evidence_lines:dl.evidence_lines,citations:dl.citations,confidence:dl.confidence,fact_text:dl.fact_text,impact_text:dl.impact_text});
+              wc.parentNode.insertBefore(ansNode, wc.nextSibling);
+            }
+          });
+        }
+      }).catch(function (e) { confirmBtn.textContent = '确认失败：' + (e.message || '重试'); confirmBtn.disabled = false; busy = false; });
+    });
+    var skipBtn = el('button', 'btn btn--ghost', '本次不使用画像'); skipBtn.type = 'button';
+    btnWrap.appendChild(confirmBtn); btnWrap.appendChild(skipBtn);
+    node.appendChild(btnWrap);
     return node;
   }
 
@@ -203,7 +261,7 @@
       fetchJSON('/api/task/' + encodeURIComponent(taskUid)).then(function (res) {
         var task = dataOf(res);
         if (onUpdate) onUpdate(task);
-        if (TERMINAL[String(task.status || '').toUpperCase()]) stop();
+        if (TERMINAL[String(task.state || '').toUpperCase()]) stop();
       }).catch(function () { /* 单次失败忽略，等待下一轮 */ });
     }
     function start() { if (timer || stopped) return; timer = setInterval(tick, 2000); tick(); }
