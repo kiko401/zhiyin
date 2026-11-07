@@ -1,34 +1,161 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 style="margin-bottom:4px;">画像</h2><p style="color:#5c6675;font-size:13px;margin:0 0 12px;">知音记住的你的偏好。这些字段让知音免澄清直接理解你。可修改、可导出、可删除——数据主权在你。</p>
-<div id="profile-fields"></div>
-<div style="margin-top:16px;">
+<h2 style="margin-bottom:4px;">画像</h2>
+<p style="color:#5c6675;font-size:13px;margin:0 0 12px;">知音记住的你的偏好，用于免澄清直接理解你。可逐项修改与调整授权，可导出、可删除——数据主权在你。</p>
+
+<div class="card" id="profile-card" style="display:none;padding:4px 16px;">
+  <div id="profile-rows"></div>
+</div>
+<p class="profile-legend" id="profile-legend" style="display:none;">授权说明：<b>已授权</b>＝长期用于个性化；<b>仅本次会话</b>＝只在当前会话注入；<b>不使用</b>＝不注入，仅保留原文。</p>
+
+<div class="empty-state" id="profile-empty" style="display:none;">
+  <p>画像还是空的。在对话中澄清一次即可自动构建；也可以直接在聊天里说「记住：我关注宁德时代，短线，目前被套中」。</p>
+</div>
+
+<div style="margin-top:16px;display:flex;gap:8px;">
   <button class="btn btn--ghost" onclick="exportProfile()">导出 JSON</button>
   <button class="btn btn--ghost" onclick="deleteProfile()">删除画像</button>
 </div>
+
 <script>
-fetch('/api/profile').then(function(r){return r.json()}).then(function(d){
-  var fields = d.data.fields || {}; var wrap = document.getElementById('profile-fields');
+var LABEL = {time_horizon: '投资周期', risk_context: '当前处境', unit_pref: '口径偏好',
+             watch_list: '关注列表', knowledge_level: '知识层级'};
+var AUTH_LABEL = {granted: '已授权', session_only: '仅本次会话', denied: '不使用'};
+var AUTH_CLASS = {granted: 'badge--fact', session_only: 'badge--inferred', denied: 'badge--denied'};
+var VALUE_MAP = {
+  knowledge_level: {novice: '新手', beginner: '入门', active: '有经验', veteran: '资深', professional: '专业'},
+  time_horizon: {intraday: '日内', short: '短线', swing: '波段', mid: '中线', long: '长线'}
+};
+var fields = {};
+var editingKey = null;
+
+function displayValue(k, v) {
+  if (Array.isArray(v)) return v.map(String).filter(Boolean);
+  if (v === null || v === undefined || v === '') return ['—'];
+  var s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+  var m = VALUE_MAP[k];
+  if (m && m[s]) s = m[s];
+  return [s];
+}
+
+function chip(text) {
+  var s = document.createElement('span');
+  s.className = 'chip-tag';
+  s.textContent = text;
+  return s;
+}
+
+function render() {
+  var wrap = document.getElementById('profile-rows');
+  wrap.innerHTML = '';
   var keys = Object.keys(fields);
-  if (!keys.length) { wrap.innerHTML = '<div class="empty-state"><p>画像为空，在对话中澄清后会自动构建。</p></div>'; return; }
-  keys.forEach(function(k) {
+  document.getElementById('profile-card').style.display = keys.length ? '' : 'none';
+  document.getElementById('profile-legend').style.display = keys.length ? '' : 'none';
+  document.getElementById('profile-empty').style.display = keys.length ? 'none' : '';
+  keys.forEach(function (k) {
     var f = fields[k];
-    var card = document.createElement('section'); card.className = 'card'; card.style.marginBottom = '8px';
-    var label = {time_horizon:'周期', risk_context:'处境', unit_pref:'口径', watch_list:'关注列表', knowledge_level:'知识层级'}[k] || k;
-    var val = typeof f.value === 'object' ? JSON.stringify(f.value) : (f.value || '—');
-    var src = f.value_source || '';
-    var auth = f.auth_state || '';
-    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;"><strong>' + label + '</strong>' +
-      '<span class="badge badge--' + (auth === 'granted' ? 'fact' : 'inferred') + '">' + auth + '</span></div>' +
-      '<p style="margin:4px 0 0;font-size:14px;">' + val + '</p>';
-    wrap.appendChild(card);
+    var row = document.createElement('div');
+    row.className = 'profile-row';
+
+    var lab = document.createElement('div');
+    lab.className = 'profile-label';
+    lab.textContent = LABEL[k] || k;
+    row.appendChild(lab);
+
+    var val = document.createElement('div');
+    val.className = 'profile-value';
+    if (editingKey === k) {
+      var input = document.createElement('input');
+      input.className = 'profile-input';
+      input.id = 'pi-' + k;
+      var cur = f.value;
+      input.value = Array.isArray(cur) ? cur.join('，') : (cur === null || cur === undefined ? '' : String(cur));
+      val.appendChild(input);
+
+      var authSel = document.createElement('select');
+      authSel.className = 'profile-input profile-auth';
+      authSel.id = 'pa-' + k;
+      ['granted', 'session_only', 'denied'].forEach(function (a) {
+        var opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = AUTH_LABEL[a];
+        if ((f.auth_state || 'granted') === a) opt.selected = true;
+        authSel.appendChild(opt);
+      });
+      val.appendChild(authSel);
+
+      var ops = document.createElement('div');
+      ops.className = 'profile-ops';
+      var save = document.createElement('button');
+      save.className = 'btn btn--primary btn--sm';
+      save.textContent = '保存';
+      save.onclick = function () { saveField(k); };
+      var cancel = document.createElement('button');
+      cancel.className = 'btn btn--ghost btn--sm';
+      cancel.textContent = '取消';
+      cancel.onclick = function () { editingKey = null; render(); };
+      ops.appendChild(save);
+      ops.appendChild(cancel);
+      val.appendChild(ops);
+    } else {
+      displayValue(k, f.value).forEach(function (t) { val.appendChild(chip(t)); });
+
+      var meta = document.createElement('div');
+      meta.className = 'profile-meta';
+      meta.appendChild(Object.assign(document.createElement('span'), {textContent: AUTH_LABEL[f.auth_state] || f.auth_state || '—', className: 'badge ' + (AUTH_CLASS[f.auth_state] || 'badge--inferred')}));
+      val.appendChild(meta);
+    }
+    row.appendChild(val);
+
+    if (editingKey !== k) {
+      var ops = document.createElement('div');
+      ops.className = 'profile-ops';
+      var btn = document.createElement('button');
+      btn.className = 'btn btn--ghost btn--sm';
+      btn.textContent = '修改';
+      btn.onclick = function () { editingKey = k; render(); };
+      ops.appendChild(btn);
+      row.appendChild(ops);
+    }
+    wrap.appendChild(row);
   });
-});
+}
+
+function saveField(k) {
+  var raw = document.getElementById('pi-' + k).value.trim();
+  var auth = document.getElementById('pa-' + k).value;
+  var value;
+  if (k === 'watch_list') {
+    value = raw.split(/[，,、\s]+/).filter(Boolean);
+  } else {
+    value = raw;
+  }
+  fetch('/api/profile/field/' + k, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({value: value, auth_state: auth})
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.code === 0) {
+      editingKey = null;
+      return load();
+    }
+    alert(d.message || '保存失败');
+  });
+}
+
+function load() {
+  return fetch('/api/profile').then(function (r) { return r.json(); }).then(function (d) {
+    fields = (d.data && d.data.fields) || {};
+    render();
+  });
+}
+load();
+
 function exportProfile() { location.href = '/api/profile/export'; }
 function deleteProfile() {
   if (!confirm('确定删除画像？此操作不可逆。')) return;
-  fetch('/api/profile', {method:'DELETE'}).then(function(r){return r.json()}).then(function(d){
-    if (d.code === 0) location.reload();
+  fetch('/api/profile', {method: 'DELETE'}).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.code === 0) load();
   });
 }
 </script>

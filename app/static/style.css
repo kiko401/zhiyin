@@ -629,3 +629,17 @@ details > summary::-webkit-details-marker {
 .evi-item .field-row { padding: 1px 0; }
 .evi-raw { margin-top: 6px; }
 .evi-raw summary { font-size: 12px; color: #8a94a6; cursor: pointer; }
+
+/* 画像页 */
+.profile-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid #eef1f6; }
+.profile-row:last-child { border-bottom: none; }
+.profile-label { width: 76px; flex-shrink: 0; font-weight: 600; font-size: 13px; color: #1a3a6b; padding-top: 3px; }
+.profile-value { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.profile-meta { display: flex; width: 100%; margin-top: 2px; }
+.profile-ops { display: flex; gap: 6px; flex-shrink: 0; }
+.chip-tag { background: #eef3fb; color: #2f6fed; border-radius: 6px; padding: 2px 10px; font-size: 13px; }
+.profile-input { border: 1px solid #d7dee9; border-radius: 8px; padding: 6px 10px; font-size: 13px; width: 100%; box-sizing: border-box; }
+.profile-auth { width: 140px; margin-top: 6px; }
+.profile-legend { color: #8a94a6; font-size: 12px; margin: 10px 2px; }
+.badge--denied { background: #fdecec; color: #d64545; }
+.btn--sm { padding: 4px 12px; font-size: 12px; }
