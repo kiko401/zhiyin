@@ -467,7 +467,8 @@ async def _execute(task_uid: str):
         content = await _generate(task, spec, evidences, question)
         text_dump = _verifiable_text(content)
         clean_dump = json.dumps([e for e in evidences if not e.get("gap")], ensure_ascii=False, default=str)
-        bad = _verify(text_dump, clean_dump) if clean else []  # 无事实证据（如知识类）时跳过数字比对
+        has_clean = any(not e.get("gap") and not e.get("error") for e in evidences)
+        bad = _verify(text_dump, clean_dump) if has_clean else []  # 无事实证据（如知识类）时跳过数字比对
         if bad or compliance.scan_redline(text_dump):
             content = await _generate(task, spec, evidences, question)  # 重写一次
             text_dump = _verifiable_text(content)
