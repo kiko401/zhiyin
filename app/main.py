@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api import auth, chat, feed, idea, pages, profile, spec, standing, task
+from app.api import auth, chat, extras, feed, idea, pages, profile, spec, standing, task
 from app.core import config, security
 from app.core.db import check_db
 from app.core.responses import api_error_handler
@@ -28,6 +28,7 @@ app.include_router(spec.router)
 app.include_router(task.router)
 app.include_router(standing.router)
 app.include_router(idea.router)
+app.include_router(extras.router)
 app.include_router(feed.router)
 app.include_router(profile.router)
 app.include_router(pages.router)
