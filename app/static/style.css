@@ -463,3 +463,20 @@ a { color: var(--c-primary); }
   border-color: #1a3a6b !important;
   box-shadow: 0 2px 8px rgba(26,58,107,.12);
 }
+
+/* composer 固定视口底部 */
+#composer {
+  position: fixed !important;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 760px;
+  z-index: 20;
+}
+#stream, .stream {
+  padding-bottom: 100px !important;
+}
+body {
+  padding-bottom: 90px;
+}
