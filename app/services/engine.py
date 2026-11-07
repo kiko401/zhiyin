@@ -139,6 +139,80 @@ async def _exec_step(step: dict, ticker: str | None) -> dict:
     return {"tool": tool, "gap": f"工具 {tool} 未实现"}
 
 
+TOOL_LABELS = {"snapshot": "行情快照", "kline": "日K行情", "valuation": "估值指标", "financials": "财务报表",
+               "limit_up": "涨停池", "hot_list": "热门股榜", "news": "资讯", "capital": "资金流",
+               "breadth": "市场宽度", "index": "指数行情"}
+
+_KV_LABELS = {"last_price": "最新价", "price_change": "涨跌", "price_change_rate": "涨跌幅",
+              "volume": "成交量", "turnover": "成交额", "close_price": "收盘", "open_price": "开盘",
+              "high_price": "最高", "low_price": "最低", "pe_ttm": "PE（TTM）", "pe_mrq": "PE（MRQ）",
+              "pb_mrq": "PB（MRQ）", "ps_ttm": "PS（TTM）", "pcf_ttm": "PCF（TTM）",
+              "operating_income": "营业总收入", "net_profit": "净利润", "net_profit_atsopc": "归母净利润",
+              "basic_eps": "基本每股收益"}
+
+
+def _fmt_num(v) -> str:
+    if isinstance(v, (int, float)):
+        a = abs(v)
+        if a >= 1e8:
+            return f"{v / 1e8:.2f} 亿"
+        if a >= 1e4:
+            return f"{v / 1e4:.2f} 万"
+        return f"{v:g}"
+    return str(v)
+
+
+def _evidence_item(e: dict) -> dict:
+    """证据 → 结构化摘要（确定性拼装，非模型生成），供降级/直答卡渲染。"""
+    item = {"tool": e.get("tool"), "tool_label": TOOL_LABELS.get(e.get("tool"), e.get("tool")),
+            "source": e.get("source"), "as_of": e.get("as_of"), "unit": e.get("unit"),
+            "caliber": e.get("caliber"), "summary": "", "kv": [], "raw": None}
+    if e.get("gap"):
+        item["summary"] = e["gap"]
+        return item
+    if e.get("error"):
+        item["summary"] = f"取数失败：{e['error']}"
+        return item
+    p = e.get("payload") or {}
+    item["raw"] = json.dumps(p, ensure_ascii=False, default=str)[:280]
+    t = e.get("tool")
+    if t == "kline" and isinstance(p.get("bars"), list) and p["bars"]:
+        bars = p["bars"]
+        closes = [b.get("close_price") for b in bars if isinstance(b.get("close_price"), (int, float))]
+        highs = [b.get("high_price") for b in bars if isinstance(b.get("high_price"), (int, float))]
+        lows = [b.get("low_price") for b in bars if isinstance(b.get("low_price"), (int, float))]
+        item["summary"] = f"共 {len(bars)} 根日K"
+        kv = []
+        if closes:
+            kv.append(["最新收盘", _fmt_num(closes[0])])
+        if highs:
+            kv.append(["区间最高", _fmt_num(max(highs))])
+        if lows:
+            kv.append(["区间最低", _fmt_num(min(lows))])
+        item["kv"] = kv
+    elif t == "financials" and isinstance(p.get("items"), list) and p["items"]:
+        it0 = p["items"][0]
+        period = f"{it0.get('fiscal_year', '')}{it0.get('fiscal_period', '')}"
+        item["summary"] = f"最新报告期 {period}（累计口径）" if period else "利润表报告期序列"
+        kv = []
+        for k in ("operating_income", "net_profit", "net_profit_atsopc", "basic_eps"):
+            if it0.get(k) is not None:
+                kv.append([_KV_LABELS[k], _fmt_num(it0[k])])
+        if p.get("latest_yoy_pct") is not None:
+            kv.append(["最新单季营收同比", f"{p['latest_yoy_pct']}%"])
+        item["kv"] = kv
+    elif t in ("limit_up", "hot_list") and isinstance(p.get("top"), list):
+        names = [str(x.get("name") or x.get("stock_name") or "?") for x in p["top"][:3]]
+        item["summary"] = f"共 {len(p['top'])} 只" + ("：" + "、".join(names) if names else "")
+    elif isinstance(p, dict):
+        item["kv"] = [[_KV_LABELS[k], _fmt_num(v)] for k, v in p.items()
+                      if k in _KV_LABELS and isinstance(v, (int, float))]
+        item["summary"] = "关键数据如下" if item["kv"] else ""
+    if not item["summary"]:
+        item["summary"] = "原始数据见展开"
+    return item
+
+
 def _num_tokens(text: str) -> list[str]:
     return re.findall(r"\d+(?:\.\d+)?", text)
 
@@ -212,17 +286,14 @@ async def _generate(task_row, spec: dict, evidences: list, question: str | None)
         metric = str(spec.get("fields", {}).get("metric", {}).get("value", ""))
         caliber = str(spec.get("fields", {}).get("caliber", {}).get("value", ""))
         tk = spec.get("fields", {}).get("ticker", {}).get("value", {})
-        lines = [f"{tk.get('name')}（{tk.get('code')}）{metric}：" ]
         cites = []
         for i, e in enumerate(clean, 1):
-            lines.append(f"[{i}] 证据（{e['tool']}，时点 {e.get('as_of')}，{e.get('caliber')}）："
-                         + json.dumps(e.get("payload"), ensure_ascii=False, default=str)[:400])
             cites.append({"n": i, "source": e.get("source"), "as_of": e.get("as_of"),
                           "unit": e.get("unit"), "caliber": e.get("caliber"), "tool": e.get("tool")})
         content = {
             "type": "fact_card",
-            "statement": f"{tk.get('name')} {metric} 见下方证据卡。口径：{caliber}；数据均带来源与时点。",
-            "evidence_lines": lines, "citations": cites,
+            "statement": f"{tk.get('name')}（{tk.get('code')}）{metric}。口径：{caliber}；数据均带来源与时点。",
+            "evidence_items": [_evidence_item(e) for e in clean], "citations": cites,
         }
         return content
 
@@ -369,8 +440,7 @@ async def _execute(task_uid: str):
             task.finished_at = datetime.now()
             await _event(db, task.id, "verify_fail", stage="VERIFYING", payload={"reason": "事实层证据不可用"})
             content = {"type": "evidence_card", "statement": "数据源暂不可用，以下为可用证据与缺口说明",
-                       "evidence_lines": [json.dumps(e, ensure_ascii=False, default=str)[:300] for e in evidences],
-                       "citations": []}
+                       "evidence_items": [_evidence_item(e) for e in evidences], "citations": []}
             db.add(Answer(task_id=task.id, answer_uid=str(uuid.uuid4()), content=content, confidence="low"))
             await _event(db, task.id, "deliver", stage="DEGRADED")
             await _deliver_to_session(db, task, content)
@@ -399,9 +469,8 @@ async def _execute(task_uid: str):
                 raise ValueError(f"输出校验未通过：数字失源 {bad[:5]}")
         degraded = False
     except Exception as e:  # 模型故障或校验失败 → E1 证据卡
-        content = {"type": "evidence_card", "statement": "AI 分析暂不可用，以下为证据数据",
-                   "evidence_lines": [json.dumps(e, ensure_ascii=False, default=str)[:300]
-                                      for e in evidences if not e.get("gap")],
+        content = {"type": "evidence_card", "statement": "AI 分析暂不可用，以下为可用证据数据",
+                   "evidence_items": [_evidence_item(e) for e in evidences if not e.get("gap")],
                    "citations": [], "note": str(e)[:120]}
         degraded = True
 

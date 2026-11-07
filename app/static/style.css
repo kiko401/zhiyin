@@ -618,3 +618,14 @@ details > summary {
 details > summary::-webkit-details-marker {
   display: none;
 }
+
+/* 证据结构化摘要（降级卡 / 直答卡） */
+.evi-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.evi-item { border: 1px solid #e3e8f0; border-radius: 10px; padding: 10px 12px; background: #fbfcfe; }
+.evi-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.evi-tool { font-weight: 600; font-size: 13px; color: #1a3a6b; }
+.evi-meta { font-size: 12px; color: #8a94a6; }
+.evi-summary { margin: 2px 0 6px; font-size: 13px; }
+.evi-item .field-row { padding: 1px 0; }
+.evi-raw { margin-top: 6px; }
+.evi-raw summary { font-size: 12px; color: #8a94a6; cursor: pointer; }

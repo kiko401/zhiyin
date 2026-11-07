@@ -128,6 +128,34 @@
     return node;
   }
 
+  function renderEvidenceItems(items) {
+    var wrap = el('div', 'evi-list');
+    (items || []).forEach(function (it) {
+      var b = el('div', 'evi-item');
+      var head = el('div', 'evi-head');
+      head.appendChild(el('span', 'evi-tool', it.tool_label || it.tool || '证据'));
+      if (it.source) head.appendChild(badge(it.source === 'dossier' ? '底稿' : it.source === 'fuyao' ? '扶摇' : it.source, 'source'));
+      if (it.as_of) head.appendChild(el('span', 'evi-meta', '时点 ' + it.as_of));
+      if (it.caliber) head.appendChild(el('span', 'evi-meta', it.caliber));
+      b.appendChild(head);
+      if (it.summary) b.appendChild(el('p', 'evi-summary', it.summary));
+      (it.kv || []).forEach(function (r) {
+        var row = el('div', 'field-row');
+        row.appendChild(el('span', 'field-name', r[0]));
+        row.appendChild(el('span', 'field-value', String(r[1])));
+        b.appendChild(row);
+      });
+      if (it.raw) {
+        var det = el('details', 'evi-raw');
+        det.appendChild(el('summary', null, '原始数据'));
+        det.appendChild(el('pre', 'fallback-payload', it.raw));
+        b.appendChild(det);
+      }
+      wrap.appendChild(b);
+    });
+    return wrap;
+  }
+
   function renderAnswer(p) {
     var node = cardNode('answer');
     var type = p.type || 'four_part';
@@ -137,10 +165,13 @@
       if (p.impact_text) node.appendChild(el('p', 'card-impact', p.impact_text));
     } else if (type === 'fact_card') {
       node.appendChild(noteHead('事实查询', '直答', 'fact'));
+      if (p.statement) node.appendChild(el('p', 'card-summary', p.statement));
+      if (p.evidence_items) node.appendChild(renderEvidenceItems(p.evidence_items));
       (p.evidence_lines || []).forEach(function (ln) { node.appendChild(el('p', null, ln)); });
     } else if (type === 'evidence_card') {
       node.appendChild(noteHead('证据数据', '降级', 'inferred'));
       node.appendChild(el('p', null, p.statement || 'AI 分析暂不可用'));
+      if (p.evidence_items) node.appendChild(renderEvidenceItems(p.evidence_items));
       (p.evidence_lines || []).forEach(function (ln) { node.appendChild(el('pre', 'fallback-payload', ln)); });
     } else if (type === 'knowledge_card') {
       node.appendChild(noteHead('知识回答', '知识', 'fact'));
