@@ -163,13 +163,11 @@
       }
       if (p.gaps) {
         details.appendChild(el('strong', null, '未覆盖与假设'));
-        var gapOut = [];
-        p.gaps.split(/\n+/).forEach(function (line) {
-          line.split(/(?=[①-⑳])|(?=\d+[)）、])/).forEach(function (item) {
-            if (item.trim()) gapOut.push(item.trim());
-          });
+        var gapList = Array.isArray(p.gaps) ? p.gaps : [p.gaps];
+        gapList.forEach(function (item) {
+          var t = String(item).trim();
+          if (t) details.appendChild(el('p', null, t));
         });
-        gapOut.forEach(function (item) { details.appendChild(el('p', null, item)); });
       }
       if ((p.citations || []).length) {
         details.appendChild(el('strong', null, '引用'));

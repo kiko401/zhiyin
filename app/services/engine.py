@@ -243,7 +243,7 @@ async def _generate(task_row, spec: dict, evidences: list, question: str | None)
         "2) 证据没有的信息不得编造，写入 gaps 段；"
         "3) 禁用词：涨停预测、建议买入、目标价、稳赚、必涨；不输出买卖指令与涨跌预测；"
         '4) 输出 JSON：{"summary":"不超过80字的结论摘要","pros":["事实与正方论点，每条含[n]"],'
-        '"cons":["反方论点与风险，每条含[n]"],"gaps":"未覆盖与假设"}。'
+        '"cons":["反方论点与风险，每条含[n]"],"gaps":["未覆盖与假设，数组，每条独立一项，1~3条，每条不超过60字"]}。'
         "语气中性，仅供参考。"
     )
     blocks = []
@@ -261,6 +261,13 @@ async def _generate(task_row, spec: dict, evidences: list, question: str | None)
             f"{gap_note}\n证据块：\n" + "\n".join(blocks))
 
     content = await llm_json(sys_p, user, task_row)
+    g = content.get("gaps")
+    if isinstance(g, list):
+        content["gaps"] = [str(x).strip() for x in g if str(x).strip()]
+    elif isinstance(g, str) and g.strip():
+        content["gaps"] = [g.strip()]
+    else:
+        content["gaps"] = []
     content["type"] = "four_part"
     content["citations"] = cites
     return content
