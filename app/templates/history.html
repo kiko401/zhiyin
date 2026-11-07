@@ -1,18 +1,57 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 style="margin-bottom:16px;">历史会话</h2>
-<div id="session-list"></div>
+<h2 style="margin-bottom:4px;">历史</h2>
+<p style="color:#5c6675;font-size:13px;margin:0 0 4px;">每一轮对话、每个任务与回答均已落库，可随时回放——这是产品可审计性的一部分。</p>
+<p style="color:#aab4c0;font-size:12px;margin:0 0 12px;">点击会话可查看完整卡片流：提问、消解过程、研究规格、工作卡与回答。</p>
+<div class="card" id="hist-card" style="display:none;padding:2px 16px;">
+  <div id="hist-rows"></div>
+</div>
+<div class="empty-state" id="hist-empty" style="display:none;">
+  <p>还没有会话。回到对话页提一个问题，这里就会出现第一条记录。</p>
+  <p style="margin-top:8px;"><a class="btn btn--primary" href="/">去对话</a></p>
+</div>
 <script>
-fetch('/api/sessions').then(function(r){return r.json()}).then(function(d){
-  var items = d.data.items || []; var wrap = document.getElementById('session-list');
-  if (!items.length) { wrap.innerHTML = '<div class="empty-state"><p>暂无历史会话。</p></div>'; return; }
-  items.forEach(function(s) {
-    var card = document.createElement('section'); card.className = 'card'; card.style.marginBottom = '8px'; card.style.cursor = 'pointer';
-    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;"><strong>' + (s.title || '空会话') + '</strong>' +
-      '<span class="badge badge--' + (s.state === 'ANSWERED' ? 'fact' : 'inferred') + '">' + s.state + '</span></div>' +
-      '<p style="font-size:12px;color:#aab4c0;margin:4px 0 0;">' + s.last_active_at + '</p>';
-    card.addEventListener('click', function() { location.href = '/history/' + s.session_uid; });
-    wrap.appendChild(card);
+var STATE_LABEL = {ANSWERED: '已回答', IDLE: '进行中', CLOSED: '已关闭'};
+fetch('/api/sessions?size=50').then(function (r) { return r.json(); }).then(function (d) {
+  var items = (d.data && d.data.items) || [];
+  var total = (d.data && d.data.total) || 0;
+  var rows = document.getElementById('hist-rows');
+  document.getElementById('hist-card').style.display = items.length ? '' : 'none';
+  document.getElementById('hist-empty').style.display = items.length ? 'none' : '';
+  if (total > items.length) {
+    var more = document.createElement('p');
+    more.style.cssText = 'font-size:12px;color:#aab4c0;margin:10px 0 2px;';
+    more.textContent = '共 ' + total + ' 条，当前显示最近 ' + items.length + ' 条';
+    rows.parentNode.appendChild(more);
+  }
+  items.forEach(function (s) {
+    var row = document.createElement('div');
+    row.className = 'hist-row';
+    row.onclick = function () { location.href = '/history/' + s.session_uid; };
+
+    var main = document.createElement('div');
+    main.className = 'hist-main';
+    var title = document.createElement('div');
+    title.className = 'hist-title';
+    title.textContent = s.title || '空会话';
+    main.appendChild(title);
+    var time = document.createElement('div');
+    time.className = 'hist-time';
+    time.textContent = (s.last_active_at || '').replace('T', ' ');
+    main.appendChild(time);
+
+    var st = document.createElement('span');
+    st.className = 'badge ' + (s.state === 'ANSWERED' ? 'badge--fact' : 'badge--inferred');
+    st.textContent = STATE_LABEL[s.state] || s.state;
+
+    var arrow = document.createElement('span');
+    arrow.className = 'hist-arrow';
+    arrow.textContent = '›';
+
+    row.appendChild(main);
+    row.appendChild(st);
+    row.appendChild(arrow);
+    rows.appendChild(row);
   });
 });
 </script>

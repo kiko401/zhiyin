@@ -669,3 +669,26 @@ details > summary::-webkit-details-marker {
 .golden-judge[open] summary::before { content: "▾ "; }
 .golden-judge p { margin: 6px 0 0; font-size: 12.5px; color: #5c6675; }
 @media (max-width: 640px) { .page-main { padding: 12px 12px 40px; } }
+
+/* 点子页 */
+.ideas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.idea-card { padding: 12px 14px; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.idea-card--active { border-color: #2f6fed; box-shadow: 0 0 0 2px rgba(47, 111, 237, .12); }
+.idea-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.idea-desc { font-size: 13px; color: #5c6675; margin: 6px 0 8px; min-height: 36px; }
+.idea-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.idea-aud { font-size: 12px; color: #aab4c0; }
+
+/* 历史页 */
+.hist-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eef1f6; cursor: pointer; }
+.hist-row:last-child { border-bottom: none; }
+.hist-row:hover .hist-title { color: #2f6fed; }
+.hist-main { flex: 1; min-width: 0; }
+.hist-title { font-size: 14px; color: #1f2a3d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-time { font-size: 12px; color: #aab4c0; margin-top: 2px; }
+.hist-arrow { color: #c3cad6; font-size: 16px; }
+
+/* 方法论页 */
+.toc-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+a.chip-tag { text-decoration: none; }
+.about-group { margin: 22px 0 10px; font-size: 15px; color: #1a3a6b; }

@@ -1,53 +1,113 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 style="margin-bottom:8px;">点子</h2>
-<p style="color:#5c6675;font-size:13px;margin-bottom:16px;">预设规格起点，选标的即预填，一键委托。</p>
-<div id="ideas-grid"></div>
+<h2 style="margin-bottom:4px;">点子</h2>
+<p style="color:#5c6675;font-size:13px;margin:0 0 4px;">预设的研究起点：选一个点子、补一个标的，知音自动生成研究规格并执行，不需要会措辞。</p>
+<p style="color:#aab4c0;font-size:12px;margin:0 0 14px;">适合第一次使用：从这里发起，比自由提问更快得到结构化结果。执行过程与回答在对话页查看。</p>
+<div class="ideas-grid" id="ideas-grid"></div>
 <div id="idea-launch" style="display:none;margin-top:16px;">
-  <section class="card card--spec">
-    <strong>确认研究</strong>
-    <p id="idea-desc" style="font-size:13px;color:#5c6675;margin:8px 0 4px;"></p>
-    <div class="field-row" style="display:flex;gap:8px;align-items:center;margin:8px 0;">
-      <span style="min-width:60px;font-weight:600;">标的</span>
-      <input id="idea-ticker" class="form-input" style="flex:1;" placeholder="输入代码或名称，如 300502.SZ 或 新易盛">
+  <section class="card" style="padding:14px 16px;">
+    <strong id="idea-name">发起研究</strong>
+    <p id="idea-desc" style="font-size:13px;color:#5c6675;margin:6px 0 10px;"></p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span style="font-weight:600;font-size:13px;">研究对象</span>
+      <input id="idea-ticker" class="form-input" style="flex:1;min-width:200px;" placeholder="输入代码或名称，如 300502.SZ 或 新易盛">
+      <button class="btn btn--primary" id="idea-confirm" onclick="confirmIdea()">发起研究</button>
     </div>
-    <button class="btn btn--primary" id="idea-confirm" onclick="confirmIdea()">发起研究</button>
+    <p style="font-size:12px;color:#aab4c0;margin:8px 0 0;">发起后可在对话页看到研究规格与执行进度；点击子菜单「试试」也能在对话中直接发起这些点子。</p>
   </section>
+</div>
+<div class="empty-state" id="ideas-empty" style="display:none;">
+  <p>点子货架为空。</p>
 </div>
 <script>
 var currentIdea = null;
-fetch('/api/ideas').then(function(r){return r.json()}).then(function(d){
-  var ideas = d.data || []; var wrap = document.getElementById('ideas-grid');
-  ideas.forEach(function(idea) {
-    var card = document.createElement('section'); card.className = 'card'; card.style.marginBottom = '8px'; card.style.cursor = 'pointer';
-    card.innerHTML = '<strong>' + idea.name + '</strong>' +
-      (idea.ifind_dependent ? ' <span class="badge badge--inferred">需 iFinD</span>' : '') +
-      '<p style="font-size:13px;color:#5c6675;margin:4px 0 0;">' + (idea.description || '') + '</p>' +
-      '<p style="font-size:12px;color:#aab4c0;margin:2px 0 0;">适用：' + (idea.audience || '') + '</p>';
-    card.addEventListener('click', function() { selectIdea(idea); });
+var selectedCard = null;
+var TYPE_LABEL = {fact_query: '事实直答', decision_support: '决策研究', limit_up_review: '情绪复盘',
+                  sector_review: '板块扫描', capital_perspective: '资金透视'};
+
+fetch('/api/ideas').then(function (r) { return r.json(); }).then(function (d) {
+  var ideas = d.data || [];
+  var wrap = document.getElementById('ideas-grid');
+  if (!ideas.length) { document.getElementById('ideas-empty').style.display = ''; return; }
+  ideas.forEach(function (idea) {
+    var card = document.createElement('section');
+    card.className = 'card idea-card';
+
+    var head = document.createElement('div');
+    head.className = 'idea-head';
+    var name = document.createElement('strong');
+    name.textContent = idea.name;
+    head.appendChild(name);
+    var badge = document.createElement('span');
+    badge.className = 'badge ' + (idea.ifind_dependent ? 'badge--inferred' : 'badge--fact');
+    badge.textContent = idea.ifind_dependent ? '依赖 iFinD' : '标准数据源';
+    head.appendChild(badge);
+    card.appendChild(head);
+
+    var desc = document.createElement('p');
+    desc.className = 'idea-desc';
+    desc.textContent = idea.description || '';
+    card.appendChild(desc);
+
+    var foot = document.createElement('div');
+    foot.className = 'idea-foot';
+    var aud = document.createElement('span');
+    aud.className = 'idea-aud';
+    aud.textContent = '适用：' + (idea.audience || '全体个人投资者');
+    foot.appendChild(aud);
+    var go = document.createElement('button');
+    go.className = 'btn btn--ghost btn--sm';
+    go.textContent = '发起研究 ›';
+    go.onclick = function (e) { e.stopPropagation(); selectIdea(idea, card); };
+    foot.appendChild(go);
+    card.appendChild(foot);
+
+    card.onclick = function () { selectIdea(idea, card); };
     wrap.appendChild(card);
   });
 });
-function selectIdea(idea) {
+
+function selectIdea(idea, card) {
   currentIdea = idea;
-  document.getElementById('idea-launch').style.display = 'block';
+  if (selectedCard) selectedCard.classList.remove('idea-card--active');
+  selectedCard = card;
+  card.classList.add('idea-card--active');
+  document.getElementById('idea-launch').style.display = '';
+  document.getElementById('idea-name').textContent = '发起研究：' + idea.name;
   document.getElementById('idea-desc').textContent = idea.description || '';
-  document.getElementById('idea-ticker').value = '';
-  document.getElementById('idea-launch').scrollIntoView({block:'center'});
+  var input = document.getElementById('idea-ticker');
+  input.value = '';
+  input.placeholder = idea.required_input === 'sector' ? '输入板块名，如 白酒 / 半导体'
+    : idea.required_input === 'ticker' ? '输入代码或名称，如 300502.SZ 或 新易盛'
+    : '无需输入，直接发起';
+  var btn = document.getElementById('idea-confirm');
+  btn.disabled = false;
+  btn.textContent = '发起研究';
+  document.getElementById('idea-launch').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
+
 function confirmIdea() {
   if (!currentIdea) return;
   var ticker = document.getElementById('idea-ticker').value.trim();
-  if (!ticker && currentIdea.required_input === 'ticker') { alert('请输入标的'); return; }
-  fetch('/api/idea/' + currentIdea.id + '/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ticker: ticker})})
-    .then(function(r){return r.json()}).then(function(d){
-      if (d.code === 0 && d.data.spec_uid) {
-        return fetch('/api/spec/' + d.data.spec_uid + '/confirm', {method:'POST'}).then(function(r){return r.json()}).then(function(cd){
-          if (cd.code === 0) { alert('研究已启动，回到对话页查看工作卡与回答。'); location.href = '/'; }
-          else alert(cd.message || '启动失败');
-        });
-      } else alert(d.message || '发起失败');
-    });
+  if (!ticker && currentIdea.required_input !== 'none') { alert('请输入研究对象'); return; }
+  var btn = document.getElementById('idea-confirm');
+  btn.disabled = true;
+  btn.textContent = '正在启动…';
+  fetch('/api/idea/' + currentIdea.id + '/launch', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ticker: ticker})
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.code === 0 && d.data.spec_uid) {
+      return fetch('/api/spec/' + d.data.spec_uid + '/confirm', {method: 'POST'}).then(function (r) { return r.json(); }).then(function (cd) {
+        if (cd.code === 0) {
+          btn.textContent = '已启动，正在跳转到对话页…';
+          setTimeout(function () { location.href = '/'; }, 600);
+        } else { btn.disabled = false; btn.textContent = '发起研究'; alert(cd.message || '启动失败'); }
+      });
+    }
+    btn.disabled = false; btn.textContent = '发起研究';
+    alert(d.message || '发起失败');
+  });
 }
 </script>
 {% endblock %}

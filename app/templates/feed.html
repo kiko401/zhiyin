@@ -1,33 +1,44 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 style="margin-bottom:4px;">动态</h2><p style="color:#5c6675;font-size:13px;margin:0 0 12px;">知音替你值守盯盘后的产出汇报。点击「这条不重要」可训练降噪，越用越准。</p>
+<h2 style="margin-bottom:4px;">动态</h2>
+<p style="color:#5c6675;font-size:13px;margin:0 0 4px;">值守任务的主动汇报：你委托知音盯住的事，有结果时以简报形式出现在这里，不用你反复刷新。</p>
+<p style="color:#aab4c0;font-size:12px;margin:0 0 12px;">简报触发是确定性规则（词表命中、阈值穿越、定时到期），不是模型自由发挥；点「这条不重要」会收紧触发词表，越用越安静。</p>
 {% if briefings %}
 <div id="feed-list">
 {% for b in briefings %}
   <section class="card card--briefing" style="margin-bottom:12px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
       <strong>{{ b.headline or '值守简报' }}</strong>
-      <span class="badge badge--stage">简报</span>
+      <span style="font-size:12px;color:#aab4c0;white-space:nowrap;">{{ b.created_at.strftime("%m-%d %H:%M") if b.created_at else "" }}</span>
     </div>
     <p style="margin:8px 0 4px;">{{ b.fact_text }}</p>
     {% if b.impact_text %}<p style="font-size:13px;color:#5c6675;margin:0 0 4px;">{{ b.impact_text }}</p>{% endif %}
-    <p style="font-size:12px;color:#aab4c0;margin:4px 0 0;">{{ b.created_at.strftime("%Y-%m-%d %H:%M") if b.created_at else "" }}</p>
-    <div style="margin-top:8px;">
-      <button class="btn btn--text" onclick="feedback('{{ b.briefing_uid }}', 'not_important')">这条不重要</button>
-      <button class="btn btn--text" onclick="feedback('{{ b.briefing_uid }}', 'useful')">有用</button>
+    <div style="margin-top:10px;display:flex;gap:4px;justify-content:flex-end;border-top:1px solid #eef1f6;padding-top:6px;">
+      <button class="btn btn--text" id="fb-{{ b.briefing_uid }}" onclick="feedback('{{ b.briefing_uid }}', 'useful')">有用</button>
+      <button class="btn btn--text" id="fbn-{{ b.briefing_uid }}" onclick="feedback('{{ b.briefing_uid }}', 'not_important')">这条不重要</button>
     </div>
   </section>
 {% endfor %}
 </div>
 {% else %}
 <div class="empty-state">
-  <p>暂无简报。创建值守任务后，检查结果会以简报形式出现在这里。</p>
+  <p>暂无简报。在「盯与追」创建一个值守任务（如「宁德时代跌破 180 提醒我」），检查结果会以简报形式出现在这里。</p>
+  <p style="margin-top:8px;"><a class="btn btn--primary" href="/tasks">去创建值守任务</a></p>
 </div>
 {% endif %}
 <script>
 function feedback(uid, type) {
-  fetch('/api/briefing/' + uid + '/feedback', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({feedback:type})})
-    .then(function(r){return r.json()}).then(function(d){ if (d.code === 0) location.reload(); });
+  var btn = document.getElementById(type === 'useful' ? 'fb-' + uid : 'fbn-' + uid);
+  var other = document.getElementById(type === 'useful' ? 'fbn-' + uid : 'fb-' + uid);
+  fetch('/api/briefing/' + uid + '/feedback', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({feedback: type})
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.code === 0) {
+      if (btn) { btn.textContent = type === 'useful' ? '已标记有用' : '已收紧触发词表'; btn.disabled = true; }
+      if (other) other.disabled = true;
+    } else if (btn) { btn.textContent = '反馈失败，重试'; }
+  });
 }
 </script>
 {% endblock %}

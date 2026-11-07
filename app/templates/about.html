@@ -1,12 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 style="margin-bottom:16px;">方法论 · 机制公示</h2>
+<h2 style="margin-bottom:4px;">方法论 · 机制公示</h2>
+<p style="color:#5c6675;font-size:13px;margin:0 0 4px;">本页公示知音的全部机制判据，与 PRD 第 2 章一一对应；评审核验时，可将这里的每一条与产品实际行为逐条对照。</p>
+<p style="color:#aab4c0;font-size:12px;margin:0 0 12px;">机制分三层：理解层负责把一句话变成可执行的规格，执行层负责把规格变成带证据的回答，边界层负责什么不能做、错了怎么办。</p>
 
+<div class="toc-chips">
+  <a class="chip-tag" href="#m-locate">产品定位</a>
+  <a class="chip-tag" href="#m-understand">理解层</a>
+  <a class="chip-tag" href="#m-execute">执行层</a>
+  <a class="chip-tag" href="#m-boundary">边界层</a>
+</div>
+
+<h3 class="about-group" id="m-locate">产品定位</h3>
 <section class="card" style="margin-bottom:12px;">
-  <strong>产品定位</strong>
-  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">知音是投资者的个人研究智能体。用户以一句话、一个点子或一条委托发起研究；知音理解意图（必要时澄清），生成可确认可编辑的研究规格，调度数据工具执行，交付带来源、正反论点齐备的研究框架；对持续委托长期值守，以简报主动汇报。</p>
-  <p style="font-size:13px;color:#5c6675;margin:4px 0 0;">AI 工程立场：<strong>模型负责语义，规则负责边界，引擎负责过程。</strong></p>
+  <p style="font-size:13px;color:#3d4757;margin:0;">知音是投资者的个人研究智能体。用户以一句话、一个点子或一条委托发起研究；知音理解意图（必要时澄清），生成可确认可编辑的研究规格，调度数据工具执行，交付带来源、正反论点齐备的研究框架；对持续委托长期值守，以简报主动汇报。</p>
+  <p style="font-size:13px;margin:8px 0 0;">AI 工程立场：<strong>模型负责语义，规则负责边界，引擎负责过程。</strong></p>
 </section>
+
+<h3 class="about-group" id="m-understand">理解层：把一句话变成可执行的规格</h3>
 
 <section class="card" style="margin-bottom:12px;">
   <strong>六类歧义模型（A1–A6）</strong>
@@ -25,8 +36,20 @@
 </section>
 
 <section class="card" style="margin-bottom:12px;">
+  <strong>三层词典与用户画像</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">L1 标准术语 / L2 市场黑话 / L3 用户自定义，置信度足够时静默消解、不足时进入澄清。画像白名单五字段（周期/处境/口径/关注列表/知识层级），逐字段三态授权（已授权/仅本次会话/不使用）。</p>
+</section>
+
+<h3 class="about-group" id="m-execute">执行层：把规格变成带证据的回答</h3>
+
+<section class="card" style="margin-bottom:12px;">
   <strong>证据蓝图与引用四要素</strong>
   <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">任务类型确定性映射工具组合（非模型自由规划）。扶摇承担个股事实面（九工具），iFinD 承担环境归因面（六工具）。引用四要素：来源/时点/单位/口径，角标可点回。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>任务执行引擎</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">一处引擎、五入口。状态机：QUEUED → PLANNING → FETCHING → VERIFYING → ASSEMBLING → DELIVERED / DEGRADED / FAILED。task_event 事件溯源，三层监看（工作卡/任务中心/工作日志）。并发 Semaphore(8)，日配额（研究 30 + 检查 50）。</p>
 </section>
 
 <section class="card" style="margin-bottom:12px;">
@@ -35,19 +58,16 @@
 </section>
 
 <section class="card" style="margin-bottom:12px;">
+  <strong>持续任务与简报</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">触发为确定性规则（词表命中/阈值穿越/定时到期），模型仅做动静定级与行文。频控：同标的同日合并、每日 ≤1 条。负反馈：不重要 → 词表收紧一档。简报默认拉取式（动态页），推送为可选项默认关闭。</p>
+</section>
+
+<h3 class="about-group" id="m-boundary">边界层：什么不能做、错了怎么办</h3>
+
+<section class="card" style="margin-bottom:12px;">
   <strong>合规三级（R1–R3）</strong>
   <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">R1 硬红线（涨跌预测/买卖指令/收益承诺）→ 边界卡转译，绝不作答。R2 软风险（情绪化语境）→ 强化风险段。R3 常规 → 标准免责。</p>
   <p style="font-size:13px;color:#5c6675;margin:4px 0 0;">定性依据：证监会公告〔2012〕40 号（荐股软件界定）——产品输出为研究框架与事实整理，非投资咨询。</p>
-</section>
-
-<section class="card" style="margin-bottom:12px;">
-  <strong>任务执行引擎</strong>
-  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">一处引擎、五入口。状态机：QUEUED → PLANNING → FETCHING → VERIFYING → ASSEMBLING → DELIVERED / DEGRADED / FAILED。task_event 事件溯源，三层监看（工作卡/任务中心/工作日志）。并发 Semaphore(8)，日配额（研究 30 + 检查 50）。输出校验器：数字-证据比对 + 红线扫描，失败重写一次再降级为证据卡。</p>
-</section>
-
-<section class="card" style="margin-bottom:12px;">
-  <strong>持续任务与简报</strong>
-  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">触发为确定性规则（词表命中/阈值穿越/定时到期），模型仅做动静定级与行文。频控：同标的同日合并、每日 ≤1 条。负反馈：不重要 → 词表收紧一档。简报默认拉取式（动态页），推送为 V1.1 可选项默认关闭。</p>
 </section>
 
 <section class="card" style="margin-bottom:12px;">
