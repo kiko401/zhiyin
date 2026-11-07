@@ -258,8 +258,10 @@ async def decide(
     if info.get("risk_tier") == 1:
         return {"action": "boundary", "state": "BOUNDARY", "card": _boundary_card(text)}
 
-    # 标的解析（D10 真实候选）
+    # 标的解析（D10 真实候选）；LLM 未能识别时回落词典消解结果
     raw_names = list(info.get("tickers") or [])
+    if not raw_names and lex["map"]:
+        raw_names = list(lex["map"].keys())
     tick = await _resolve_tickers(raw_names, lex["map"], prof, session_ticker)
     if answers.get("ticker"):
         tick["resolved"].insert(0, {**answers["ticker"], "source": "clarify"})
