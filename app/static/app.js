@@ -122,9 +122,7 @@
         var ansNode = renderAnswer({card_type:'answer',task_uid:p.task_uid,type:dl.type,summary:dl.summary,pros:dl.pros,cons:dl.cons,gaps:dl.gaps,statement:dl.statement,evidence_lines:dl.evidence_lines,citations:dl.citations,confidence:dl.confidence,fact_text:dl.fact_text,impact_text:dl.impact_text});
         node.parentNode.insertBefore(ansNode, node.nextSibling);
       }
-      var lt = node.querySelector('.work-loading');
-      if (lt) lt.remove();
-      clearInterval(loadTimer);
+      if (task.state === 'DELIVERED' || task.state === 'DEGRADED') { var lt = node.querySelector('.work-loading'); if (lt) lt.remove(); clearInterval(loadTimer); }
     });
     }
     return node;
@@ -243,9 +241,7 @@
               var ansNode = renderAnswer({card_type:'answer',task_uid:task.task_uid,type:dl.type,summary:dl.summary,pros:dl.pros,cons:dl.cons,gaps:dl.gaps,statement:dl.statement,evidence_lines:dl.evidence_lines,citations:dl.citations,confidence:dl.confidence,fact_text:dl.fact_text,impact_text:dl.impact_text});
               wc.parentNode.insertBefore(ansNode, wc.nextSibling);
             }
-            var lt = wc.querySelector('.work-loading');
-            if (lt) lt.remove();
-            clearInterval(loadTimer);
+            if (task.state === 'DELIVERED' || task.state === 'DEGRADED') { var lt = wc.querySelector('.work-loading'); if (lt) lt.remove(); clearInterval(loadTimer); }
           });
         }
       }).catch(function (e) { confirmBtn.textContent = '确认失败：' + (e.message || '重试'); confirmBtn.disabled = false; busy = false; });
