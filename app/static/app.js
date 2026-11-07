@@ -191,7 +191,7 @@
     node.appendChild(hint);
     var legend = el('p', null, '');
     legend.style.cssText = 'font-size:11px;color:#aab4c0;margin:0 0 8px;';
-    legend.innerHTML = '来源：<span class="badge badge--source">词典</span> = 黑话消解 &nbsp; <span class="badge badge--source">画像</span> = 你的偏好 &nbsp; <span class="badge badge--inferred">假设</span> = 未确认推断';
+    legend.innerHTML = '来源：<span class="badge badge--source">词典消解</span>=黑话转标准名称 &nbsp; <span class="badge badge--source">画像注入</span>=记住的你的偏好 &nbsp; <span class="badge badge--source">标的检索</span>=从全市场匹配 &nbsp; <span class="badge badge--inferred">推断</span>=未确认，可编辑';
     node.appendChild(legend);
     var btnWrap = el('div', 'spec-actions');
     var confirmBtn = el('button', 'btn btn--primary', '确认执行'); confirmBtn.type = 'button';

@@ -426,8 +426,8 @@ async def _save_and_card(user_id, session_id, task_type, fields, terms, risk_tie
             "value": display,
             "resolved_by": val["resolved_by"],
         })
-    source_badge = {"lexicon": "词典", "profile": "画像", "clarify": "澄清", "assumption": "假设",
-                    "search": "检索", "session": "上文"}
+    source_badge = {"lexicon": "词典消解", "profile": "画像注入", "clarify": "你刚确认的", "assumption": "推断",
+                    "search": "标的检索", "session": "沿用上文"}
     for f in field_rows:
         f["resolved_by_label"] = source_badge.get(f["resolved_by"], f["resolved_by"])
     return {

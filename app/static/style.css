@@ -554,3 +554,11 @@ body {
 .demo-toggle:hover {
   background: #eef3fa;
 }
+
+/* spec-actions 按钮间距 */
+.spec-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+}
