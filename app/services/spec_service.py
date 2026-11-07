@@ -84,3 +84,9 @@ async def last_ticker_of_session(session_id: int) -> dict | None:
     if isinstance(t, dict) and t.get("code"):
         return t
     return None
+
+
+async def get_uid_by_id(spec_id: int) -> str | None:
+    async with SessionLocal() as db:
+        row = await db.get(ResearchSpec, spec_id)
+        return row.spec_uid if row else None

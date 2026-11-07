@@ -106,6 +106,15 @@ async def chat(body: ChatBody, user_id: int = Depends(require_user)):
         cards.append({"card_type": "system_banner", "level": "warn",
                       "text": f"输入超过{config.MAX_INPUT_CHARS}字，已截断处理"})
 
+    if result["action"] == "direct":
+        from app.services import engine
+
+        spec_row = await spec_service.get_by_uid(result["spec_uid"])
+        task = await engine.create_task(user_id=user_id, session_id=session_id,
+                                        spec_row=spec_row, auto_confirmed=True)
+        card = {"card_type": "work", "task_uid": task.task_uid,
+                "state": task.state, "task_type": spec_row.task_type}
+
     async with SessionLocal() as db:
         row = await db.execute(
             select(ChatSession).where(ChatSession.session_uid == session_uid)
@@ -132,7 +141,8 @@ async def chat(body: ChatBody, user_id: int = Depends(require_user)):
                 "free_input": bool(result.get("free_input")),
             })
         _persist_card(db, s, card)
-        s.state = result["state"]
+        if result["action"] != "direct":
+            s.state = result["state"]
         s.last_active_at = __import__("datetime").datetime.now()
         await db.commit()
 

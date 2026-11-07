@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}登录 · 知音 Zhiyin{% endblock %}
+
+{% block content %}
+<main class="login-wrap">
+  <section class="card login-card">
+    <h1 class="login-brand">知音 <span class="login-brand-en">Zhiyin</span></h1>
+    <p class="login-tagline">听得懂、干得完、盯得住、记得住、有分寸——把你的研究接过去</p>
+
+    <button id="demo-entry" class="btn login-demo" type="button">Demo 一键进入</button>
+    <p class="login-error" id="auth-error" hidden></p>
+
+    <form id="login-form">
+      <label class="field-label">用户名
+        <input class="form-input" name="username" type="text" autocomplete="username" placeholder="3-20 位字母、数字、下划线或中文" required>
+      </label>
+      <label class="field-label">密码
+        <input class="form-input" name="password" type="password" autocomplete="current-password" placeholder="至少 8 位" required>
+      </label>
+      <button class="btn" type="submit">登录</button>
+    </form>
+
+    <form id="register-form" hidden>
+      <label class="field-label">用户名
+        <input class="form-input" name="username" type="text" autocomplete="username" placeholder="3-20 位字母、数字、下划线或中文" required>
+      </label>
+      <label class="field-label">密码
+        <input class="form-input" name="password" type="password" autocomplete="new-password" placeholder="至少 8 位" required>
+      </label>
+      <button class="btn" type="submit">注册并进入</button>
+    </form>
+
+    <p class="login-alt"><a class="link" id="toggle-register" href="#">注册新账号</a></p>
+  </section>
+</main>
+{% endblock %}

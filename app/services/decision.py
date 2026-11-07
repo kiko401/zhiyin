@@ -282,10 +282,16 @@ async def decide(
             "schedule": DELEGATE_DEFAULTS["schedule"],
             "notify": DELEGATE_DEFAULTS["notify"],
         }
+        from app.services import spec_service
+
+        fields = {"ticker": {"value": ticker, "resolved_by": ticker["source"] if ticker else "assumption"}}
+        row = await spec_service.save_spec(user_id, session_id, "standing_watch", fields,
+                                           lex["notes"], info.get("risk_tier", 0), trigger=trigger)
         return {
             "action": "delegate", "state": "SPEC_REVIEW",
             "card": {
                 "card_type": "delegate",
+                "spec_uid": row.spec_uid,
                 "ticker": ticker,
                 "trigger": trigger,
                 "freq_cap": "每日每标的 ≤ 1 条",

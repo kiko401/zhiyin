@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}知音 Zhiyin{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="/">知音</a>
+      <button class="nav-btn" type="button" title="历史会话">历史</button>
+      <nav class="site-nav">
+        <a href="/ideas">点子</a>
+        <a href="/feed">动态</a>
+        <a href="/tasks">盯与追</a>
+        <a href="/profile">画像</a>
+        <a href="/golden">金标集</a>
+        <a href="/eval">评测</a>
+        <a href="/about">方法论</a>
+        <a href="/docs">文档</a>
+      </nav>
+    </div>
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>本产品输出为研究框架与事实整理，仅供参考，不构成投资建议；不承诺收益；数据来源与时点以引用为准；所有 AI 生成内容均有标识；不作为买卖依据，据此操作风险自担</span>
+      <a class="link" href="/about">AI 生成内容说明</a>
+    </div>
+  </footer>
+</body>
+</html>

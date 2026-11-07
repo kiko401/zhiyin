@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}对话 · 知音 Zhiyin{% endblock %}
+
+{% block content %}
+<main class="chat-page">
+  <div class="stream" id="stream">
+    <div class="empty-state">
+      <p class="empty-title">把一个研究问题交给我</p>
+      <p class="empty-tip">可以直接提问，也可以委托我持续盯住</p>
+      <div class="chips">
+        <button class="chip" type="button">宁德时代最新一期财报表现如何？</button>
+        <button class="chip" type="button">帮我看看贵州茅台当前估值处在什么位置</button>
+        <button class="chip" type="button">持有的沪深300指数基金需要调整吗？</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="composer" id="composer">
+    <div class="composer-inner">
+      <textarea class="form-input composer-input" id="composer-input" rows="1" maxlength="2000" placeholder="输入问题或委托任务，Enter 发送，Shift+Enter 换行"></textarea>
+      <span class="composer-count" id="composer-count">0/2000</span>
+      <button class="btn composer-send" id="composer-send" type="button">发送</button>
+    </div>
+  </div>
+</main>
+{% endblock %}
