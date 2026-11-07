@@ -221,7 +221,7 @@ docker exec zhiyin-fastapi pytest tests/ -v
 
 | 命题提交要求 | 仓库内落点 |
 | --- | --- |
-| 可访问、可实际操作的 Web 产品 URL | `http://<服务器地址>:8083`（部署后替换），十路由全可操作，demo 一键进入 |
+| 可访问、可实际操作的 Web 产品 URL | http://124.222.0.186:8083，十路由全可操作，demo 一键进入 |
 | 源代码仓库与 README | 本文件：启动方式（快速开始）、环境变量、产品选择（背景与功能特性）、AI 的角色、数据来源、已知边界和未做事项 |
 | AI 使用与验证记录 | `ai_usage_log` + `task_event` + `tool_call` 落库，`/api/ai-usage/export` 导出 CSV + `docs/AI_USAGE.md`（人机分工与修正明细） |
 | 测试说明 | `docs/TESTING.md` + pytest 六组 47 用例（主链路 / 数据缺失与接口失败 / 极端与合规边界 / 任务链路） |
