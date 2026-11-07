@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 style="margin-bottom:8px;">金标集（60 题）</h2>
+<h2 style="margin-bottom:4px;">金标集（60 题）</h2><p style="color:#5c6675;font-size:13px;margin:0 0 4px;">评测题库公开可查——题目怎么出、判分怎么判、结论怎么来，全部可回查。</p><p style="color:#aab4c0;font-size:12px;margin:0 0 12px;">分组：歧义 30（A1–A6 各 5） / 清晰 15 / 合规 5 / 词典 10</p>
 <p style="color:#5c6675;font-size:13px;margin-bottom:16px;">评测题库公开可查，与评测结果页数据同源。分组：歧义 30 / 清晰 15 / 合规 5 / 词典 10。</p>
 {% for group_name, group_label in [('ambiguity','歧义组'),('clear','清晰组'),('compliance','合规组'),('lexicon','词典组')] %}
 {% set items = groups.get(group_name, []) %}

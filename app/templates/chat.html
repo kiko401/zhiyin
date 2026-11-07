@@ -1,27 +1,49 @@
 {% extends "base.html" %}
-
-{% block title %}对话 · 知音 Zhiyin{% endblock %}
-
 {% block content %}
-<main class="chat-page">
-  <div class="stream" id="stream">
-    <div class="empty-state">
-      <p class="empty-title">把一个研究问题交给我</p>
-      <p class="empty-tip">可以直接提问，也可以委托我持续盯住</p>
-      <div class="chips">
-        <button class="chip" type="button">宁德时代最新一期财报表现如何？</button>
-        <button class="chip" type="button">帮我看看贵州茅台当前估值处在什么位置</button>
-        <button class="chip" type="button">持有的沪深300指数基金需要调整吗？</button>
+<main class="container">
+  <div id="stream" class="stream">
+    <div class="empty-state" id="empty-state">
+      <div style="text-align:center;margin-bottom:20px;">
+        <p style="font-size:18px;font-weight:700;color:#1a3a6b;margin:0 0 4px;">👋 欢迎来到知音</p>
+        <p style="font-size:13px;color:#5c6675;margin:0;">你的个人研究智能体。以下是五条路径，<strong>点击即发送</strong>，每条演示一个核心机制：</p>
       </div>
+      <div style="display:flex;flex-direction:column;gap:8px;max-width:480px;margin:0 auto;">
+        <div class="chip demo-chip" style="display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;border:1px solid #e8ecf1;border-radius:8px;background:#fff;" onclick="sendDemo('宁王这波断板了还能拿吗')">
+          <span class="badge badge--fact" style="min-width:72px;text-align:center;">熟客体验</span>
+          <span style="font-size:14px;">宁王这波断板了还能拿吗</span>
+          <span style="font-size:11px;color:#aab4c0;margin-left:auto;">词典消解 + 画像注入 → 零澄清直出规格</span>
+        </div>
+        <div class="demo-chip" style="display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;border:1px solid #e8ecf1;border-radius:8px;background:#fff;" onclick="sendDemo('贵州茅台最新收盘价是多少')">
+          <span class="badge badge--fact" style="min-width:72px;text-align:center;">清晰直答</span>
+          <span style="font-size:14px;">贵州茅台最新收盘价是多少</span>
+          <span style="font-size:11px;color:#aab4c0;margin-left:auto;">规则直答 → 不打扰</span>
+        </div>
+        <div class="demo-chip" style="display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;border:1px solid #e8ecf1;border-radius:8px;background:#fff;" onclick="sendDemo('明天哪只股票能涨停')">
+          <span class="badge badge--inferred" style="min-width:72px;text-align:center;">合规红线</span>
+          <span style="font-size:14px;">明天哪只股票能涨停</span>
+          <span style="font-size:11px;color:#aab4c0;margin-left:auto;">边界卡转译 → 拒答不冷场</span>
+        </div>
+        <div class="demo-chip" style="display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;border:1px solid #e8ecf1;border-radius:8px;background:#fff;" onclick="sendDemo('帮我盯着新易盛的减持公告，有动静告诉我')">
+          <span class="badge badge--stage" style="min-width:72px;text-align:center;">委托值守</span>
+          <span style="font-size:14px;">帮我盯着新易盛的减持公告，有动静告诉我</span>
+          <span style="font-size:11px;color:#aab4c0;margin-left:auto;">四要素委托 → 持续盯盘 → 简报汇报</span>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#aab4c0;margin-top:16px;text-align:center;">也可直接输入任何问题 · 顶部导航查看其他页面</p>
     </div>
   </div>
-
-  <div class="composer" id="composer">
-    <div class="composer-inner">
-      <textarea class="form-input composer-input" id="composer-input" rows="1" maxlength="2000" placeholder="输入问题或委托任务，Enter 发送，Shift+Enter 换行"></textarea>
-      <span class="composer-count" id="composer-count">0/2000</span>
-      <button class="btn composer-send" id="composer-send" type="button">发送</button>
-    </div>
+  <div id="composer" class="composer">
+    <input class="composer-input form-input" type="text" maxlength="2000" placeholder="输入问题或委托任务，Enter 发送">
+    <span class="composer-count">0/2000</span>
+    <button class="composer-send btn btn--primary">发送</button>
   </div>
 </main>
+<script>
+function sendDemo(text) {
+  var input = document.querySelector('.composer-input');
+  if (input) { input.value = text; input.dispatchEvent(new Event('input')); }
+  var btn = document.querySelector('.composer-send');
+  if (btn) btn.click();
+}
+</script>
 {% endblock %}
