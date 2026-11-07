@@ -15,6 +15,17 @@ from app.models import Briefing, StandingTask
 ROOT = Path(__file__).resolve().parents[2]
 templates = Jinja2Templates(directory=str(ROOT / "app" / "templates"))
 
+
+def asset_v(name: str) -> str:
+    """静态资源版本号：取文件修改时间，部署重启后自动失效浏览器缓存。"""
+    try:
+        return str(int((ROOT / "app" / "static" / name).stat().st_mtime))
+    except OSError:
+        return "1"
+
+
+templates.env.globals["asset_v"] = asset_v
+
 router = APIRouter(tags=["pages"])
 
 
