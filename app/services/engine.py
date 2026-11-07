@@ -166,7 +166,7 @@ def _evidence_item(e: dict) -> dict:
     """证据 → 结构化摘要（确定性拼装，非模型生成），供降级/直答卡渲染。"""
     item = {"tool": e.get("tool"), "tool_label": TOOL_LABELS.get(e.get("tool"), e.get("tool")),
             "source": e.get("source"), "as_of": e.get("as_of"), "unit": e.get("unit"),
-            "caliber": e.get("caliber"), "summary": "", "kv": [], "raw": None}
+            "caliber": e.get("caliber"), "summary": "", "kv": []}
     if e.get("gap"):
         item["summary"] = e["gap"]
         return item
@@ -174,7 +174,6 @@ def _evidence_item(e: dict) -> dict:
         item["summary"] = f"取数失败：{e['error']}"
         return item
     p = e.get("payload") or {}
-    item["raw"] = json.dumps(p, ensure_ascii=False, default=str)[:280]
     t = e.get("tool")
     if t == "kline" and isinstance(p.get("bars"), list) and p["bars"]:
         bars = p["bars"]

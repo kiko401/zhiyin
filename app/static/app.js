@@ -145,12 +145,6 @@
         row.appendChild(el('span', 'field-value', String(r[1])));
         b.appendChild(row);
       });
-      if (it.raw) {
-        var det = el('details', 'evi-raw');
-        det.appendChild(el('summary', null, '原始数据'));
-        det.appendChild(el('pre', 'fallback-payload', it.raw));
-        b.appendChild(det);
-      }
       wrap.appendChild(b);
     });
     return wrap;
