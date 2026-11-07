@@ -480,3 +480,38 @@ a { color: var(--c-primary); }
 body {
   padding-bottom: 90px;
 }
+
+/* demo suggestion bar above composer */
+.demo-bar {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 760px;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #f0f4f8;
+  border-top: 1px solid #e8ecf1;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.demo-bar .demo-chip {
+  display: inline-block;
+  padding: 5px 12px;
+  border: 1px solid #d4dbe3;
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #2b3442;
+  flex-shrink: 0;
+  transition: border-color 150ms, background 150ms;
+}
+.demo-bar .demo-chip:hover {
+  border-color: #1a3a6b;
+  background: #e8f0fa;
+}
