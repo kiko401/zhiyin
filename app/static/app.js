@@ -174,6 +174,10 @@
     var node = cardNode('spec');
     node.appendChild(el('p', 'card-title', '研究规格'));
     if (p.spec_uid) node.dataset.specUid = p.spec_uid;
+    var ctxHint = el('p', null, '');
+    ctxHint.style.cssText = 'font-size:12px;color:#aab4c0;margin:0 0 10px;';
+    ctxHint.textContent = '标的 = 哪只股票 · 处境 = 你目前是套着还是赚着 · 周期 = 打算拿多久';
+    node.appendChild(ctxHint);
     var wrap = el('div', 'spec-fields');
     (p.fields || []).forEach(function (f) {
       var display = f.value == null ? '' : (typeof f.value === 'object' ? (f.value.name || JSON.stringify(f.value)) : String(f.value));

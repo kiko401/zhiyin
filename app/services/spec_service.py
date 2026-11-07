@@ -7,9 +7,9 @@ from app.core.db import SessionLocal
 from app.models import ResearchSpec
 
 FIELD_LABELS = {
-    "ticker": "研究哪只股票",
+    "ticker": "标的",
     "time_horizon": "周期",
-    "risk_context": "你目前是",
+    "risk_context": "处境",
     "caliber": "口径",
 }
 
