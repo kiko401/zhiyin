@@ -1,9 +1,62 @@
 {% extends "base.html" %}
-
-{% block title %}方法论 · 知音 Zhiyin{% endblock %}
-
 {% block content %}
-<main class="container">
-  <h1 class="page-title">方法论</h1>
-</main>
+<h2 style="margin-bottom:16px;">方法论 · 机制公示</h2>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>产品定位</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">知音是投资者的个人研究智能体。用户以一句话、一个点子或一条委托发起研究；知音理解意图（必要时澄清），生成可确认可编辑的研究规格，调度数据工具执行，交付带来源、正反论点齐备的研究框架；对持续委托长期值守，以简报主动汇报。</p>
+  <p style="font-size:13px;color:#5c6675;margin:4px 0 0;">AI 工程立场：<strong>模型负责语义，规则负责边界，引擎负责过程。</strong></p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>六类歧义模型（A1–A6）</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">A1 标的歧义（宁王/它呢） · A2 语义歧义（断板/做T） · A3 口径歧义（营收单季/累计） · A4 周期歧义（还能拿吗：短线 or 中长线） · A5 语境歧义（被套/浮盈/空仓） · A6 意图歧义（要事实/要框架/要复盘）</p>
+  <p style="font-size:13px;color:#5c6675;margin:4px 0 0;">处置闸门：仅影响答案方向的歧义才澄清；消解优先于澄清（词典 → 画像 → 澄清 ≤2 轮）。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>三层决策器（D1–D11）</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">词典层（D3/D4 消解）→ 规则层（D1 红线/D2 直答）→ 大模型层（D6 意图分类）。产出：D7 歧义清单 → D8 澄清卡 → D10 真实候选 → D11 委托分流 → D9 假设兜底。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>研究规格（确认断点）</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">澄清或消解收敛后、执行前的人机确认断点。白名单字段可编辑（标的/周期/处境/口径），逐字段标注消解来源（词典/画像/澄清/假设），版本化落库可审计。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>证据蓝图与引用四要素</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">任务类型确定性映射工具组合（非模型自由规划）。扶摇承担个股事实面（九工具），iFinD 承担环境归因面（六工具）。引用四要素：来源/时点/单位/口径，角标可点回。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>回答契约</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">fact_query 直答（不调模型）；knowledge 显式标注未接入实时数据；研究类四段式（结论摘要 ≤80 字/正方/反方/未覆盖与假设）。事实与推断分色。置信度按确定性规则分档（高/中/低）。输出校验器：数字-证据比对 + 红线扫描，失败重写一次再降级。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>合规三级（R1–R3）</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">R1 硬红线（涨跌预测/买卖指令/收益承诺）→ 边界卡转译，绝不作答。R2 软风险（情绪化语境）→ 强化风险段。R3 常规 → 标准免责。</p>
+  <p style="font-size:13px;color:#5c6675;margin:4px 0 0;">定性依据：证监会公告〔2012〕40 号（荐股软件界定）——产品输出为研究框架与事实整理，非投资咨询。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>任务执行引擎</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">一处引擎、五入口。状态机：QUEUED → PLANNING → FETCHING → VERIFYING → ASSEMBLING → DELIVERED / DEGRADED / FAILED。task_event 事件溯源，三层监看（工作卡/任务中心/工作日志）。并发 Semaphore(8)，日配额（研究 30 + 检查 50）。输出校验器：数字-证据比对 + 红线扫描，失败重写一次再降级为证据卡。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>持续任务与简报</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">触发为确定性规则（词表命中/阈值穿越/定时到期），模型仅做动静定级与行文。频控：同标的同日合并、每日 ≤1 条。负反馈：不重要 → 词表收紧一档。简报默认拉取式（动态页），推送为 V1.1 可选项默认关闭。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>降级矩阵（E1–E11）</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">E1 模型故障→证据卡 · E3 数据零命中→追询 · E10 iFinD 不可用→缺口标注 · E11 调度异常→手动检查。全部显式降级，不静默生成结论。</p>
+</section>
+
+<section class="card" style="margin-bottom:12px;">
+  <strong>画像三条底线</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">不多问（非白名单不采集，denied 不再问） · 不越界（不采集金融账户、身份证明、精确资产数额） · 不外传（不用于训练、不共享、不用于差异化定价）</p>
+</section>
 {% endblock %}

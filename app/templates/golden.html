@@ -1,9 +1,21 @@
 {% extends "base.html" %}
-
-{% block title %}金标集 · 知音 Zhiyin{% endblock %}
-
 {% block content %}
-<main class="container">
-  <h1 class="page-title">金标集</h1>
-</main>
+<h2 style="margin-bottom:8px;">金标集（60 题）</h2>
+<p style="color:#5c6675;font-size:13px;margin-bottom:16px;">评测题库公开可查，与评测结果页数据同源。分组：歧义 30 / 清晰 15 / 合规 5 / 词典 10。</p>
+{% for group_name, group_label in [('ambiguity','歧义组'),('clear','清晰组'),('compliance','合规组'),('lexicon','词典组')] %}
+{% set items = groups.get(group_name, []) %}
+{% if items %}
+<strong style="display:block;margin:16px 0 8px;">{{ group_label }}（{{ items|length }} 题）</strong>
+{% for r in items %}
+<section class="card" style="margin-bottom:8px;padding:12px 16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <span class="badge badge--{{ 'fact' if group_name == 'clear' else 'inferred' }}">{{ r.gid }}</span>
+    <span style="font-size:12px;color:#aab4c0;">{{ r.expected_clarify_type }}</span>
+  </div>
+  <p style="margin:6px 0 4px;font-size:14px;">{{ r.q_text }}</p>
+  {% if r.expected_options %}<p style="font-size:12px;color:#5c6675;margin:0;">期望：{{ r.expected_options }}</p>{% endif %}
+</section>
+{% endfor %}
+{% endif %}
+{% endfor %}
 {% endblock %}

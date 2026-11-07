@@ -1,9 +1,28 @@
 {% extends "base.html" %}
-
-{% block title %}评测 · 知音 Zhiyin{% endblock %}
-
 {% block content %}
-<main class="container">
-  <h1 class="page-title">评测</h1>
-</main>
+<h2 style="margin-bottom:8px;">评测</h2>
+<p style="color:#5c6675;font-size:13px;margin-bottom:16px;">60 题金标集双臂对照（基线 vs 知音机制）+ Wilcoxon 显著性检验。全量约 6–18 分钟后台运行。</p>
+<div class="card" style="margin-bottom:16px;">
+  <strong>双臂对照</strong>
+  <p style="margin:8px 0 4px;font-size:13px;color:#5c6675;">基线臂：关闭词典/画像/澄清（规则直答）<br>知音臂：全开（词典消解 + 画像注入 + 澄清 + 证据蓝图）<br>回答模型、数据工具、判分模型、提示词完全一致</p>
+  <div style="margin-top:12px;">
+    <button class="btn btn--primary" onclick="runEval()" id="eval-btn">运行评测</button>
+  </div>
+  <div id="eval-status" style="margin-top:12px;font-size:13px;color:#5c6675;"></div>
+</div>
+<div class="card">
+  <strong>六项评测指标</strong>
+  <p style="font-size:13px;color:#5c6675;margin:8px 0 0;">方向正确率（S1 ≥0.85）· 清晰题误触率（S2 <10%）· 澄清触发正确率 · 平均交互轮次 · 词典消解正确率（S4 ≥90%）· 误消解率（<2%）</p>
+  <p style="font-size:13px;color:#5c6675;margin:4px 0 0;">统计方法：Wilcoxon 符号秩检验（α=0.05）+ 敏感性检验（剔除极端题 / 更换判分模型）</p>
+</div>
+<script>
+function runEval() {
+  var btn = document.getElementById('eval-btn'); btn.disabled = true; btn.textContent = '评测运行中…';
+  fetch('/api/eval/run', {method:'POST'}).then(function(r){return r.json()}).then(function(d){
+    if (d.code === 0) {
+      document.getElementById('eval-status').textContent = '评测已启动，后台运行中（约 6–18 分钟）。batch_id: ' + (d.data.batch_id || d.data.batch_uid || '');
+    } else { document.getElementById('eval-status').textContent = d.message || '启动失败'; btn.disabled = false; btn.textContent = '运行评测'; }
+  }).catch(function(e){ document.getElementById('eval-status').textContent = '启动失败'; btn.disabled = false; });
+}
+</script>
 {% endblock %}
