@@ -3,7 +3,7 @@ import re
 from fastapi import APIRouter, Cookie, Request, Response
 from pydantic import BaseModel, Field
 
-from app.core import security
+from app.core import config, security
 from app.core.db import SessionLocal
 from app.core.responses import ApiError, ok
 from app.models import User
@@ -11,7 +11,6 @@ from app.models import User
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_\u4e00-\u9fa5]{3,20}$")
-REGISTER_DAILY_LIMIT = 3
 LOGIN_FAIL_LOCK = 5
 COOKIE_MAX_AGE = 7 * 86400
 
@@ -42,7 +41,7 @@ async def register(body: AuthBody, request: Request, response: Response):
     # 注册限流：每 IP 每日上限，防灌
     client_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "local")
     count = await security.incr_daily(f"reg_limit:{client_ip}")
-    if count > REGISTER_DAILY_LIMIT:
+    if count > config.REGISTER_DAILY_LIMIT:
         raise ApiError(42901, "今日注册次数已达上限", status_code=429)
 
     async with SessionLocal() as db:

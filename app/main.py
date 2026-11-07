@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api import auth
+from app.api import auth, chat, spec
 from app.core import config, security
 from app.core.db import check_db
 from app.core.responses import api_error_handler
@@ -12,12 +12,16 @@ from app.core.responses import api_error_handler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 调度器随持续任务模块接入
+    from app.services import lexicon as lexicon_svc
+
+    await lexicon_svc.warmup()
     yield
 
 
 app = FastAPI(title="知音 Zhiyin", version="0.1.0", lifespan=lifespan)
 app.include_router(auth.router)
+app.include_router(chat.router)
+app.include_router(spec.router)
 app.add_exception_handler(HTTPException, api_error_handler)
 
 
