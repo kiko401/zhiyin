@@ -11,7 +11,7 @@
     </div>
     <p style="margin:8px 0 4px;">{{ b.fact_text }}</p>
     {% if b.impact_text %}<p style="font-size:13px;color:#5c6675;margin:0 0 4px;">{{ b.impact_text }}</p>{% endif %}
-    <p style="font-size:12px;color:#aab4c0;margin:4px 0 0;">{{ b.created_at[:10] }}</p>
+    <p style="font-size:12px;color:#aab4c0;margin:4px 0 0;">{{ b.created_at.strftime("%Y-%m-%d %H:%M") if b.created_at else "" }}</p>
     <div style="margin-top:8px;">
       <button class="btn btn--text" onclick="feedback('{{ b.briefing_uid }}', 'not_important')">这条不重要</button>
       <button class="btn btn--text" onclick="feedback('{{ b.briefing_uid }}', 'useful')">有用</button>
