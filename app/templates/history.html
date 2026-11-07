@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-bottom:16px;">历史会话</h2>
+<div id="session-list"></div>
+<script>
+fetch('/api/sessions').then(function(r){return r.json()}).then(function(d){
+  var items = d.data.items || []; var wrap = document.getElementById('session-list');
+  if (!items.length) { wrap.innerHTML = '<div class="empty-state"><p>暂无历史会话。</p></div>'; return; }
+  items.forEach(function(s) {
+    var card = document.createElement('section'); card.className = 'card'; card.style.marginBottom = '8px'; card.style.cursor = 'pointer';
+    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;"><strong>' + (s.title || '空会话') + '</strong>' +
+      '<span class="badge badge--' + (s.state === 'ANSWERED' ? 'fact' : 'inferred') + '">' + s.state + '</span></div>' +
+      '<p style="font-size:12px;color:#aab4c0;margin:4px 0 0;">' + s.last_active_at + '</p>';
+    card.addEventListener('click', function() { location.href = '/history/' + s.session_uid; });
+    wrap.appendChild(card);
+  });
+});
+</script>
+{% endblock %}

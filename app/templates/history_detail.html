@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-bottom:8px;">会话回放</h2>
+<a href="/history" class="link" style="font-size:13px;">← 返回列表</a>
+<div id="history-cards" style="margin-top:16px;"></div>
+<script>
+var CARD_TYPE_LABEL = {user:'', lexicon_note:'词条消解', clarify:'澄清', boundary:'边界', memory_note:'记忆', spec:'研究规格', delegate:'委托', work:'工作卡', answer:'回答', briefing:'简报', system_banner:'系统提示'};
+fetch('/api/session/{{ session_uid }}/history').then(function(r){return r.json()}).then(function(d){
+  var cards = d.data.cards || []; var wrap = document.getElementById('history-cards');
+  if (!cards.length) { wrap.innerHTML = '<div class="empty-state"><p>暂无消息。</p></div>'; return; }
+  cards.forEach(function(c) {
+    if (c.card_type === 'user') {
+      var bubble = document.createElement('div'); bubble.className = 'msg-user'; bubble.textContent = c.text || '';
+      wrap.appendChild(bubble);
+    } else {
+      var label = CARD_TYPE_LABEL[c.card_type] || c.card_type;
+      var sec = document.createElement('section'); sec.className = 'card card--' + c.card_type;
+      sec.style.marginBottom = '12px';
+      var head = document.createElement('strong'); head.textContent = label;
+      sec.appendChild(head);
+      if (c.summary) sec.appendChild(Object.assign(document.createElement('p'), {textContent: c.summary}));
+      if (c.text) sec.appendChild(Object.assign(document.createElement('p'), {textContent: c.text}));
+      if (c.statement) sec.appendChild(Object.assign(document.createElement('p'), {textContent: c.statement}));
+      if (c.fact_text) sec.appendChild(Object.assign(document.createElement('p'), {textContent: c.fact_text}));
+      if (c.question) sec.appendChild(Object.assign(document.createElement('p'), {textContent: c.question}));
+      if (c.fields && c.fields.length) {
+        c.fields.forEach(function(f) {
+          var row = document.createElement('p'); row.style.fontSize = '13px'; row.style.color = '#5c6675'; row.style.margin = '2px 0';
+          row.textContent = (f.label || f.key) + ': ' + (typeof f.value === 'object' ? JSON.stringify(f.value) : f.value) + ' (' + (f.resolved_by_label || f.resolved_by || '') + ')';
+          sec.appendChild(row);
+        });
+      }
+      if (c.citations && c.citations.length) {
+        c.citations.forEach(function(ct) {
+          var cite = document.createElement('p'); cite.style.fontSize = '12px'; cite.style.color = '#aab4c0'; cite.style.margin = '2px 0';
+          cite.textContent = '[' + ct.n + '] ' + (ct.tool || '') + ' · ' + (ct.as_of || '') + ' · ' + (ct.source || '');
+          sec.appendChild(cite);
+        });
+      }
+      wrap.appendChild(sec);
+    }
+  });
+});
+</script>
+{% endblock %}

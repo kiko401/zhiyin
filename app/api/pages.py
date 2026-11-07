@@ -110,3 +110,19 @@ async def eval_page(request: Request):
 @router.get("/about")
 async def about_page(request: Request):
     return templates.TemplateResponse(request, "about.html")
+
+
+@router.get("/history")
+async def history_page(request: Request):
+    guard = _authed(request, await _uid(request))
+    if guard:
+        return guard
+    return templates.TemplateResponse(request, "history.html")
+
+
+@router.get("/history/{session_uid}")
+async def history_detail(request: Request, session_uid: str):
+    guard = _authed(request, await _uid(request))
+    if guard:
+        return guard
+    return templates.TemplateResponse(request, "history_detail.html", {"session_uid": session_uid})
