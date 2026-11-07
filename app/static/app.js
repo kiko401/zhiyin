@@ -161,7 +161,11 @@
         details.appendChild(el('strong', null, '反方论点与风险'));
         p.cons.forEach(function (x) { details.appendChild(el('p', null, x)); });
       }
-      if (p.gaps) { details.appendChild(el('strong', null, '未覆盖与假设')); details.appendChild(el('p', null, p.gaps)); }
+      if (p.gaps) {
+        details.appendChild(el('strong', null, '未覆盖与假设'));
+        var gapItems = p.gaps.split(/(?=\d+\)\s*)/);
+        gapItems.forEach(function(item) { if (item.trim()) details.appendChild(el('p', null, item.trim())); });
+      }
       if ((p.citations || []).length) {
         details.appendChild(el('strong', null, '引用'));
         p.citations.forEach(function (ct) {
