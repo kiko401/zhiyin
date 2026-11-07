@@ -243,7 +243,28 @@
 
   var RENDERERS = {
     lexicon_note: function (p) { return renderNote('lexicon-note', '词条', p, null, 'source'); },
-    memory_note: function (p) { return renderNote('memory-note', '记忆', p, '推断', 'inferred'); },
+    memory_note: function (p, card) {
+      var node = cardNode('clarify');
+      node.appendChild(noteHead('需要你确认', '澄清', 'source'));
+      node.appendChild(el('p', null, '这条偏好要记住吗'));
+      var actions = el('div', 'clarify-actions');
+      var cid = p.clarify_id || (card && card.clarify_id);
+      var opts = [['记住','granted'],['仅本次','session_only'],['别记','denied']];
+      opts.forEach(function (o) {
+        var b = el('button', 'btn btn--ghost', o[0]); b.type = 'button';
+        b.addEventListener('click', function () {
+          var fields = p.fields || (card && card.fields) || [];
+          fields.forEach(function (f) {
+            postJSON('/api/clarify/' + cid + '/memory', {field_key: f.field_key, state: o[1]}).catch(function(){});
+          });
+          node.appendChild(el('p', 'card-footer', '已选择：' + o[0]));
+          actions.remove();
+        });
+        actions.appendChild(b);
+      });
+      node.appendChild(actions);
+      return node;
+    },
     clarify: renderClarify, boundary: renderBoundary, spec: renderSpec, delegate: renderDelegate,
     work: renderWork, answer: renderAnswer, briefing: renderBriefing, system_banner: renderSystemBanner
   };
