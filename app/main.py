@@ -39,6 +39,19 @@ async def not_found_handler(request: Request, exc):
     return JSONResponse(status_code=404, content={"code": 40401, "message": "资源不存在", "data": None})
 
 
+async def _demo_ready() -> bool:
+    try:
+        from app.core.db import engine
+
+        async with engine.connect() as conn:
+            from sqlalchemy import text as _t
+
+            row = await conn.execute(_t("SELECT 1 FROM user WHERE username = 'demo' LIMIT 1"))
+            return row.first() is not None
+    except Exception:
+        return False
+
+
 async def _count_lexicon() -> int:
     try:
         from app.core.db import engine
@@ -62,5 +75,5 @@ async def healthz():
         "redis": "ok" if redis_ok else "fail",
         "lexicon": await _count_lexicon(),
         "scheduler": "on" if config.SCHEDULER_ENABLED else "off",
-        "demo": "pending",
+        "demo": "ready" if await _demo_ready() else "pending",
     }

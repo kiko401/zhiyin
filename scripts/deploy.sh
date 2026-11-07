@@ -2,7 +2,7 @@
 # 知音 Web 原型部署脚本：在服务器 ~/zhiyin 目录下执行
 # 依赖：infra 网络与共用中间件（见 /opt/infra/run-infra.sh）
 set -e
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 echo "== 1. build image"
 docker build -t zhiyin-fastapi:latest .
