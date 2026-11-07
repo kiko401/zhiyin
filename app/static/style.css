@@ -602,12 +602,19 @@ details > summary {
   user-select: none;
 }
 details > summary::before {
-  content: '▸ 展开全文';
+  content: '▸ ';
   font-size: 13px;
 }
 details[open] > summary::before {
-  content: '▾ 收起';
+  content: '▾ ';
 }
 details > summary span {
+  display: none;
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
   display: none;
 }
