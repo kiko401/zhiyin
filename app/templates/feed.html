@@ -1,9 +1,33 @@
 {% extends "base.html" %}
-
-{% block title %}动态 · 知音 Zhiyin{% endblock %}
-
 {% block content %}
-<main class="container">
-  <h1 class="page-title">动态</h1>
-</main>
+<h2 style="margin-bottom:16px;">动态</h2>
+{% if briefings %}
+<div id="feed-list">
+{% for b in briefings %}
+  <section class="card card--briefing" style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <strong>{{ b.headline or '值守简报' }}</strong>
+      <span class="badge badge--stage">简报</span>
+    </div>
+    <p style="margin:8px 0 4px;">{{ b.fact_text }}</p>
+    {% if b.impact_text %}<p style="font-size:13px;color:#5c6675;margin:0 0 4px;">{{ b.impact_text }}</p>{% endif %}
+    <p style="font-size:12px;color:#aab4c0;margin:4px 0 0;">{{ b.created_at[:10] }}</p>
+    <div style="margin-top:8px;">
+      <button class="btn btn--text" onclick="feedback('{{ b.briefing_uid }}', 'not_important')">这条不重要</button>
+      <button class="btn btn--text" onclick="feedback('{{ b.briefing_uid }}', 'useful')">有用</button>
+    </div>
+  </section>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p>暂无简报。创建值守任务后，检查结果会以简报形式出现在这里。</p>
+</div>
+{% endif %}
+<script>
+function feedback(uid, type) {
+  fetch('/api/briefing/' + uid + '/feedback', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({feedback:type})})
+    .then(function(r){return r.json()}).then(function(d){ if (d.code === 0) location.reload(); });
+}
+</script>
 {% endblock %}

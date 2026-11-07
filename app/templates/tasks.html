@@ -1,9 +1,42 @@
 {% extends "base.html" %}
-
-{% block title %}盯与追 · 知音 Zhiyin{% endblock %}
-
 {% block content %}
-<main class="container">
-  <h1 class="page-title">盯与追</h1>
-</main>
+<h2 style="margin-bottom:16px;">盯与追</h2>
+{% if standings %}
+<div id="standing-list">
+{% for s in standings %}
+  <section class="card" style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong>{{ s.name }}</strong>
+      <span class="badge badge--stage">{{ s.status }}</span>
+    </div>
+    <p style="font-size:13px;color:#5c6675;margin:0 0 4px;">标的：{{ s.ticker or '—' }} · 类型：{{ s.task_type }} · 最近检查：{{ s.last_check_at or '尚未检查' }}</p>
+    <div class="chips">
+      {% for kw in (s.trigger_config.get('keywords') or []) %}<span class="chip">{{ kw }}</span>{% endfor %}
+    </div>
+    <div style="margin-top:8px;">
+      <button class="btn btn--text" onclick="manualCheck('{{ s.standing_uid }}')">立即检查</button>
+      <button class="btn btn--text" onclick="pauseResume('{{ s.standing_uid }}', '{{ 'paused' if s.status == 'active' else 'active' }}')">{{ '暂停' if s.status == 'active' else '恢复' }}</button>
+    </div>
+  </section>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p>还没有值守任务。在对话中发送「帮我盯着XX的减持公告」即可创建。</p>
+</div>
+{% endif %}
+<script>
+function manualCheck(uid) {
+  fetch('/api/standing/' + uid + '/check', {method:'POST'}).then(function(r){return r.json()}).then(function(d){
+    if (d.code === 0) alert('检查任务已创建，稍后在动态页查看结果');
+    else alert(d.message || '失败');
+  });
+}
+function pauseResume(uid, action) {
+  fetch('/api/standing/' + uid, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status:action})}).then(function(r){return r.json()}).then(function(d){
+    if (d.code === 0) location.reload();
+    else alert(d.message || '失败');
+  });
+}
+</script>
 {% endblock %}

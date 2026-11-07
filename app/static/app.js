@@ -218,11 +218,49 @@
     return node;
   }
 
-  function renderDelegate(p) {
+  function renderDelegate(p, card) {
     var node = cardNode('delegate');
-    node.appendChild(noteHead(p.title || '已转为任务', p.status || null, 'stage'));
-    if (p.desc || p.text) node.appendChild(el('p', null, p.desc || p.text));
-    if (p.task_uid) { var a = el('a', 'link', '查看任务进度'); a.href = '/tasks'; node.appendChild(a); }
+    node.appendChild(el('p', 'card-title', '委托确认'));
+    if (p.spec_uid) node.dataset.specUid = p.spec_uid;
+    var tk = p.ticker || {};
+    var tkLabel = typeof tk === 'object' ? (tk.name || '') : (tk || '');
+    node.appendChild(el('p', null, '监的是：' + tkLabel));
+    var trg = p.trigger || {};
+    var wrap = el('div', 'spec-fields');
+    var rows = [
+      ['盯什么', trg.scope || '公告与新闻'],
+      ['何时查', trg.schedule || '交易日每小时'],
+      ['怎么通知', trg.notify || '动态页 + 简报'],
+    ];
+    rows.forEach(function (r) {
+      var row = el('div', 'field-row');
+      row.appendChild(el('span', 'field-name', r[0]));
+      row.appendChild(el('span', 'field-value', r[1]));
+      wrap.appendChild(row);
+    });
+    if ((trg.keywords || []).length) {
+      var kwRow = el('div', 'field-row');
+      kwRow.appendChild(el('span', 'field-name', '触发词表'));
+      var chips = el('div', 'chips');
+      trg.keywords.forEach(function (kw) { chips.appendChild(el('span', 'chip', kw)); });
+      kwRow.appendChild(chips);
+      wrap.appendChild(kwRow);
+    }
+    node.appendChild(wrap);
+    if (p.freq_cap) node.appendChild(el('p', 'card-footer', p.freq_cap));
+    var btnWrap = el('div', 'spec-actions');
+    var confirmBtn = el('button', 'btn btn--primary', '确认委托'); confirmBtn.type = 'button';
+    confirmBtn.addEventListener('click', function () {
+      var uid = p.spec_uid || (card && card.spec_uid);
+      confirmBtn.textContent = '创建中…'; confirmBtn.disabled = true;
+      postJSON('/api/spec/' + uid + '/confirm').then(function (res) {
+        var d = dataOf(res);
+        node.appendChild(el('p', 'card-footer', '✅ 已开始值守，首次检查结果稍后在动态页可查'));
+        confirmBtn.remove();
+      }).catch(function (e) { confirmBtn.textContent = '失败：' + (e.message || ''); confirmBtn.disabled = false; });
+    });
+    btnWrap.appendChild(confirmBtn);
+    node.appendChild(btnWrap);
     return node;
   }
 

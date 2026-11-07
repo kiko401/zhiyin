@@ -1,9 +1,35 @@
 {% extends "base.html" %}
-
-{% block title %}画像 · 知音 Zhiyin{% endblock %}
-
 {% block content %}
-<main class="container">
-  <h1 class="page-title">画像</h1>
-</main>
+<h2 style="margin-bottom:16px;">画像</h2>
+<div id="profile-fields"></div>
+<div style="margin-top:16px;">
+  <button class="btn btn--ghost" onclick="exportProfile()">导出 JSON</button>
+  <button class="btn btn--ghost" onclick="deleteProfile()">删除画像</button>
+</div>
+<script>
+fetch('/api/profile').then(function(r){return r.json()}).then(function(d){
+  var fields = d.data.fields || {}; var wrap = document.getElementById('profile-fields');
+  var keys = Object.keys(fields);
+  if (!keys.length) { wrap.innerHTML = '<div class="empty-state"><p>画像为空，在对话中澄清后会自动构建。</p></div>'; return; }
+  keys.forEach(function(k) {
+    var f = fields[k];
+    var card = document.createElement('section'); card.className = 'card'; card.style.marginBottom = '8px';
+    var label = {time_horizon:'周期', risk_context:'处境', unit_pref:'口径', watch_list:'关注列表', knowledge_level:'知识层级'}[k] || k;
+    var val = typeof f.value === 'object' ? JSON.stringify(f.value) : (f.value || '—');
+    var src = f.value_source || '';
+    var auth = f.auth_state || '';
+    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;"><strong>' + label + '</strong>' +
+      '<span class="badge badge--' + (auth === 'granted' ? 'fact' : 'inferred') + '">' + auth + '</span></div>' +
+      '<p style="margin:4px 0 0;font-size:14px;">' + val + '</p>';
+    wrap.appendChild(card);
+  });
+});
+function exportProfile() { location.href = '/api/profile/export'; }
+function deleteProfile() {
+  if (!confirm('确定删除画像？此操作不可逆。')) return;
+  fetch('/api/profile', {method:'DELETE'}).then(function(r){return r.json()}).then(function(d){
+    if (d.code === 0) location.reload();
+  });
+}
+</script>
 {% endblock %}
