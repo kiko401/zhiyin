@@ -230,6 +230,13 @@ def _verify(answer_text: str, evidence_dump: str) -> list[str]:
     return bad
 
 
+def _verifiable_text(content: dict) -> str:
+    """仅取模型生成的叙述文本参与校验；引用序号与确定性证据摘要不参与比对。"""
+    skip = ("citations", "type", "evidence_items", "evidence_lines", "evidence", "note")
+    c = {k: v for k, v in content.items() if k not in skip}
+    return json.dumps(c, ensure_ascii=False, default=str)
+
+
 def _confidence(spec: dict, evidences: list) -> str:
     # 口径默认声明不计入假设；影响方向字段的假设才降档
     driver = [k for k in spec.get("fields", {}) if k in ("ticker", "time_horizon", "risk_context")]
@@ -458,12 +465,12 @@ async def _execute(task_uid: str):
     # ASSEMBLING：生成 + 输出校验（数字-证据比对 + 红线扫描），失败重写一次，再失败 DEGRADED
     try:
         content = await _generate(task, spec, evidences, question)
-        text_dump = json.dumps(content, ensure_ascii=False, default=str)
+        text_dump = _verifiable_text(content)
         clean_dump = json.dumps([e for e in evidences if not e.get("gap")], ensure_ascii=False, default=str)
-        bad = _verify(text_dump, clean_dump)
+        bad = _verify(text_dump, clean_dump) if clean else []  # 无事实证据（如知识类）时跳过数字比对
         if bad or compliance.scan_redline(text_dump):
             content = await _generate(task, spec, evidences, question)  # 重写一次
-            text_dump = json.dumps(content, ensure_ascii=False, default=str)
+            text_dump = _verifiable_text(content)
             bad = _verify(text_dump, clean_dump)
             if bad or compliance.scan_redline(text_dump):
                 raise ValueError(f"输出校验未通过：数字失源 {bad[:5]}")
