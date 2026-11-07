@@ -3,29 +3,67 @@
 <main class="container">
   <div id="stream" class="stream">
     <div class="empty-state" id="empty-state">
-      <p style="text-align:center;font-size:15px;color:#1a3a6b;margin:24px 0 4px;">👋 欢迎来到知音</p>
-      <p style="text-align:center;font-size:13px;color:#5c6675;margin:0;">你的研究交给知音。从下方选一条试试，或直接输入。</p>
+      <p style="text-align:center;font-size:14px;color:#aab4c0;margin:24px 0 0;">在下方输入问题，或点输入框旁的「试试」按钮查看引导。</p>
     </div>
   </div>
-  <div id="demo-bar" class="demo-bar">
-    <span style="font-size:12px;color:#aab4c0;flex-shrink:0;margin-right:4px;">试试：</span>
-    <span class="demo-chip" onclick="fillInput('宁王这波断板了还能拿吗')" title="词典消解 + 画像注入 → 零澄清直出规格">🔵 熟客 · 宁王断板</span>
-    <span class="demo-chip" onclick="fillInput('贵州茅台最新收盘价是多少')" title="规则直答 → 不打扰">🔵 直答 · 茅台收盘价</span>
-    <span class="demo-chip" onclick="fillInput('明天哪只股票能涨停')" title="边界卡转译 → 拒答不冷场">🟡 合规 · 涨停预测</span>
-    <span class="demo-chip" onclick="fillInput('帮我盯着新易盛的减持公告，有动静告诉我')" title="四要素委托 → 持续盯盘 → 简报汇报">🟢 委托 · 盯减持公告</span>
+
+  <!-- 上拉引导面板 -->
+  <div id="demo-panel" class="demo-panel" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <strong style="font-size:15px;color:#1a3a6b;">👋 欢迎来到知音</strong>
+      <button onclick="toggleDemo()" style="background:none;border:none;font-size:16px;cursor:pointer;color:#aab4c0;">✕</button>
+    </div>
+    <p style="font-size:13px;color:#5c6675;margin:0 0 12px;">你的个人研究智能体。以下是四条路径，<strong>点击填入输入框</strong>，每条演示一个核心机制：</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="demo-chip" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border:1px solid #e8ecf1;border-radius:8px;background:#fafbfc;" onclick="fillDemo('宁王这波断板了还能拿吗')">
+        <span class="badge badge--fact" style="min-width:72px;text-align:center;flex-shrink:0;">熟客体验</span>
+        <div style="flex:1;">
+          <div style="font-size:14px;">宁王这波断板了还能拿吗</div>
+          <div style="font-size:11px;color:#aab4c0;">词典消解 + 画像注入 → 零澄清直出规格</div>
+        </div>
+      </div>
+      <div class="demo-chip" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border:1px solid #e8ecf1;border-radius:8px;background:#fafbfc;" onclick="fillDemo('贵州茅台最新收盘价是多少')">
+        <span class="badge badge--fact" style="min-width:72px;text-align:center;flex-shrink:0;">清晰直答</span>
+        <div style="flex:1;">
+          <div style="font-size:14px;">贵州茅台最新收盘价是多少</div>
+          <div style="font-size:11px;color:#aab4c0;">规则直答 → 不打扰</div>
+        </div>
+      </div>
+      <div class="demo-chip" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border:1px solid #e8ecf1;border-radius:8px;background:#fafbfc;" onclick="fillDemo('明天哪只股票能涨停')">
+        <span class="badge badge--inferred" style="min-width:72px;text-align:center;flex-shrink:0;">合规红线</span>
+        <div style="flex:1;">
+          <div style="font-size:14px;">明天哪只股票能涨停</div>
+          <div style="font-size:11px;color:#aab4c0;">边界卡转译 → 拒答不冷场</div>
+        </div>
+      </div>
+      <div class="demo-chip" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border:1px solid #e8ecf1;border-radius:8px;background:#fafbfc;" onclick="fillDemo('帮我盯着新易盛的减持公告，有动静告诉我')">
+        <span class="badge badge--stage" style="min-width:72px;text-align:center;flex-shrink:0;">委托值守</span>
+        <div style="flex:1;">
+          <div style="font-size:14px;">帮我盯着新易盛的减持公告，有动静告诉我</div>
+          <div style="font-size:11px;color:#aab4c0;">四要素委托 → 持续盯盘 → 简报汇报</div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#aab4c0;margin:12px 0 0;text-align:center;">点击任意一条填入输入框，可编辑后发送 · 顶部导航查看其他页面</p>
   </div>
+
   <div id="composer" class="composer">
+    <button id="demo-toggle" class="demo-toggle" onclick="toggleDemo()" title="试试这些">💡</button>
     <input class="composer-input form-input" type="text" maxlength="2000" placeholder="输入问题或委托任务，Enter 发送">
     <span class="composer-count">0/2000</span>
     <button class="composer-send btn btn--primary">发送</button>
   </div>
 </main>
 <script>
-function fillInput(text) {
+function toggleDemo() {
+  var panel = document.getElementById('demo-panel');
+  if (panel.style.display === 'none') { panel.style.display = 'block'; }
+  else { panel.style.display = 'none'; }
+}
+function fillDemo(text) {
   var input = document.querySelector('.composer-input');
   if (input) { input.value = text; input.dispatchEvent(new Event('input')); input.focus(); }
-  var es = document.getElementById('empty-state');
-  if (es) es.style.display = 'none';
+  toggleDemo();
 }
 </script>
 {% endblock %}

@@ -515,3 +515,42 @@ body {
   border-color: #1a3a6b;
   background: #e8f0fa;
 }
+
+/* demo 上拉面板 */
+.demo-panel {
+  position: fixed;
+  bottom: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 728px;
+  z-index: 30;
+  background: #fff;
+  border: 1px solid #e8ecf1;
+  border-radius: 12px;
+  box-shadow: 0 -4px 20px rgba(26,58,107,.12);
+  padding: 16px 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.demo-panel .demo-chip:hover {
+  border-color: #1a3a6b !important;
+  background: #eef3fa !important;
+}
+.demo-toggle {
+  background: none;
+  border: 1px solid #d4dbe3;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms;
+}
+.demo-toggle:hover {
+  background: #eef3fa;
+}
