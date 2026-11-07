@@ -1,21 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 style="margin-bottom:4px;">金标集（60 题）</h2><p style="color:#5c6675;font-size:13px;margin:0 0 4px;">评测题库公开可查——题目怎么出、判分怎么判、结论怎么来，全部可回查。</p><p style="color:#aab4c0;font-size:12px;margin:0 0 12px;">分组：歧义 30（A1–A6 各 5） / 清晰 15 / 合规 5 / 词典 10</p>
-<p style="color:#5c6675;font-size:13px;margin-bottom:16px;">评测题库公开可查，与评测结果页数据同源。分组：歧义 30 / 清晰 15 / 合规 5 / 词典 10。</p>
-{% for group_name, group_label in [('ambiguity','歧义组'),('clear','清晰组'),('compliance','合规组'),('lexicon','词典组')] %}
+<h2 style="margin-bottom:4px;">金标集（60 题）</h2>
+<p style="color:#5c6675;font-size:13px;margin:0 0 12px;">评测题库公开可查——题目怎么出、期望怎么标、判分怎么判，全部可回查，与评测结果页数据同源。</p>
+
+<div class="stat-chips">
+  <span class="chip-tag">歧义 {{ groups.get('ambiguity', [])|length }}</span>
+  <span class="chip-tag">清晰 {{ groups.get('clear', [])|length }}</span>
+  <span class="chip-tag">合规 {{ groups.get('compliance', [])|length }}</span>
+  <span class="chip-tag">词典 {{ groups.get('lexicon', [])|length }}</span>
+</div>
+
+{% set group_meta = [
+  ('ambiguity', '歧义组', '标的、语义、口径、周期、语境、意图六类歧义（A1–A6），验证先澄清、后作答', 'inferred'),
+  ('clear', '清晰组', '信息完整，验证免澄清直接执行出数', 'fact'),
+  ('compliance', '合规组', '买卖指令、涨跌预测、收益承诺类问句，验证合规边界（R1）', 'denied'),
+  ('lexicon', '词典组', '黑话与板块指代，验证三层词典与画像消解', 'stage')
+] %}
+{% for group_name, group_label, group_desc, badge_kind in group_meta %}
 {% set items = groups.get(group_name, []) %}
 {% if items %}
-<strong style="display:block;margin:16px 0 8px;">{{ group_label }}（{{ items|length }} 题）</strong>
-{% for r in items %}
-<section class="card" style="margin-bottom:8px;padding:12px 16px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <span class="badge badge--{{ 'fact' if group_name == 'clear' else 'inferred' }}">{{ r.gid }}</span>
-    <span style="font-size:12px;color:#aab4c0;">{{ r.expected_clarify_type }}</span>
+<section class="golden-group">
+  <div class="golden-group-head">
+    <strong>{{ group_label }}</strong>
+    <span class="badge badge--{{ badge_kind }}">{{ items|length }} 题</span>
+    <span class="golden-group-desc">{{ group_desc }}</span>
   </div>
-  <p style="margin:6px 0 4px;font-size:14px;">{{ r.q_text }}</p>
-  {% if r.expected_options %}<p style="font-size:12px;color:#5c6675;margin:0;">期望：{{ r.expected_options }}</p>{% endif %}
+  <div class="card golden-card">
+    {% for r in items %}
+    <div class="golden-row">
+      <div class="golden-row-head">
+        <span class="golden-gid">{{ r.gid }}</span>
+        <span class="golden-q">{{ r.q_text }}</span>
+        <span class="badge badge--{{ 'inferred' if r.expected_clarify_type != 'none' else 'fact' }}">{{ clarify_labels.get(r.expected_clarify_type, r.expected_clarify_type) }}</span>
+      </div>
+      {% if r.expected_options or r.expected_intent %}
+      <div class="golden-row-meta">
+        {% if r.expected_options %}
+        <span class="golden-meta-label">候选</span>
+        {% for opt in r.expected_options.replace('；', ';').split(';') %}{% if opt.strip() %}<span class="chip-tag">{{ opt.strip() }}</span>{% endif %}{% endfor %}
+        {% endif %}
+        {% if r.expected_intent %}
+        <span class="golden-meta-label">意图</span><span class="golden-meta-text">{{ r.expected_intent }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% if r.judging_points %}
+      <details class="golden-judge">
+        <summary>判分要点</summary>
+        <p>{{ r.judging_points }}</p>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
 </section>
-{% endfor %}
 {% endif %}
 {% endfor %}
 {% endblock %}

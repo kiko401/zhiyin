@@ -643,3 +643,29 @@ details > summary::-webkit-details-marker {
 .profile-legend { color: #8a94a6; font-size: 12px; margin: 10px 2px; }
 .badge--denied { background: #fdecec; color: #d64545; }
 .btn--sm { padding: 4px 12px; font-size: 12px; }
+
+/* 统一内容容器（非聊天页） */
+.page-main { max-width: 960px; margin: 0 auto; padding: 16px 20px 48px; }
+
+/* 金标集 */
+.stat-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.golden-group { margin-top: 22px; }
+.golden-group-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.golden-group-head strong { font-size: 15px; color: #1a3a6b; }
+.golden-group-desc { font-size: 12px; color: #8a94a6; }
+.golden-card { padding: 2px 16px; }
+.golden-row { padding: 12px 0; border-bottom: 1px solid #eef1f6; }
+.golden-row:last-child { border-bottom: none; }
+.golden-row-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.golden-gid { font-size: 12px; color: #8a94a6; font-weight: 600; min-width: 28px; }
+.golden-q { font-size: 14px; color: #1f2a3d; flex: 1; min-width: 200px; }
+.golden-row-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-top: 8px; padding-left: 38px; }
+.golden-meta-label { font-size: 12px; color: #aab4c0; }
+.golden-meta-text { font-size: 12px; color: #5c6675; margin-right: 10px; }
+.golden-judge { margin: 6px 0 0 38px; }
+.golden-judge summary { font-size: 12px; color: #8a94a6; cursor: pointer; list-style: none; }
+.golden-judge summary::-webkit-details-marker { display: none; }
+.golden-judge summary::before { content: "▸ "; }
+.golden-judge[open] summary::before { content: "▾ "; }
+.golden-judge p { margin: 6px 0 0; font-size: 12.5px; color: #5c6675; }
+@media (max-width: 640px) { .page-main { padding: 12px 12px 40px; } }

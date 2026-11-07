@@ -107,7 +107,11 @@ async def golden_page(request: Request):
     groups = {}
     for r in rows:
         groups.setdefault(r["group"], []).append(r)
-    return templates.TemplateResponse(request, "golden.html", {"groups": groups})
+    return templates.TemplateResponse(request, "golden.html", {
+        "groups": groups,
+        "clarify_labels": {"none": "直接作答", "A1": "标的歧义", "A2": "语义歧义", "A3": "口径歧义",
+                           "A4": "周期歧义", "A5": "语境歧义", "A6": "意图歧义", "R1": "合规红线"},
+    })
 
 
 @router.get("/eval")
